@@ -1,0 +1,23 @@
+<!-- app/templates/auth/user.html -->
+<!-- this form is used for adding a user as well for editing a user, hence the if-clause -->
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base_single_item.html" %}
+
+{% block content3 %}
+{% if role == 'change_password' %}
+    {{ wtf.form_field(form.old_password) }}
+    {{ wtf.form_field(form.new_password) }}
+    {{ wtf.form_field(form.confirm_new_password) }}
+{% else %}
+    {{ wtf.form_field(form.username) }}
+    {{ wtf.form_field(form.first_name) }}
+        {{ wtf.form_field(form.last_name) }}
+    {{ wtf.form_field(form.email) }}
+    {{ wtf.form_field(form.is_admin) }}
+    {% if role == 'add' %}
+        {{ wtf.form_field(form.password) }}
+        {{ wtf.form_field(form.confirm_password) }}
+    {% endif %}
+{% endif %}
+{% endblock %}
