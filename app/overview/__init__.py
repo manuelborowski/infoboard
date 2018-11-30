@@ -3,6 +3,6 @@
 
 from flask import Blueprint
 
-registration = Blueprint('registration', __name__)
+overview = Blueprint('overview', __name__)
 
 from . import views

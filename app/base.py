@@ -7,8 +7,7 @@ from flask_login import current_user
 from sqlalchemy import or_
 import time, datetime
 
-from models import User, Settings, Registration, Series
-from .forms import GenderFilter, SeriesFilter
+from models import User, Settings
 from . import log
 
 class InlineButtonWidget(object):
@@ -70,29 +69,12 @@ def build_filter(table, paginate=True):
     _template = table['template']
     _filtered_list = _model.query
 
-    if _model is Registration:
-        _filtered_list = _filtered_list.join(Series)
-
     if 'query_filter' in table:
         _filtered_list = table['query_filter'](_filtered_list)
 
     _total_count = _filtered_list.count()
 
     _filter_forms = {}
-
-    #build the filter list
-    if 'gender' in _filters_enabled:
-        _filter_forms['gender'] = GenderFilter()
-        value = check_string_in_form('gender', request.values)
-        if value:
-            _filtered_list = _filtered_list.filter(Registration.gender == value)
-
-    if 'series' in _filters_enabled:
-        _filter_forms['series'] = SeriesFilter()
-        value = check_string_in_form('series', request.values)
-        if value:
-            _filtered_list = _filtered_list.filter(Series.name == value)
-
 
     #search, if required
     #from template, take order_by and put in a list.  This is user later on, to get the columns in which can be searched
@@ -103,22 +85,6 @@ def build_filter(table, paginate=True):
         a[0] += '%'
         search_value = '%' + search_value + '%'
         search_constraints = []
-        if Registration.first_name in column_list:
-            search_constraints.append(Registration.first_name.like(search_value))
-        if Registration.last_name in column_list:
-            search_constraints.append(Registration.last_name.like(search_value))
-        if Registration.classgroup in column_list:
-            search_constraints.append(Registration.classgroup.like(search_value))
-        if Registration.studentcode in column_list:
-            search_constraints.append(Registration.studentcode.like(search_value))
-        if Registration.rfidcode in column_list:
-            search_constraints.append(Registration.rfidcode.like(search_value))
-        if Registration.rfidcode2 in column_list:
-            search_constraints.append(Registration.rfidcode2.like(search_value))
-
-        if Series.name in column_list:
-            search_constraints.append(Series.name.like(search_value))
-
 
         if User.username in column_list:
             search_constraints.append(User.username.like(search_value))

@@ -17,7 +17,7 @@ import random
 app = Flask(__name__, instance_relative_config=True)
 
 #enable logging
-LOG_HANDLE = 'RR'
+LOG_HANDLE = 'IB'
 log = logging.getLogger(LOG_HANDLE)
 
 # local imports
@@ -59,7 +59,7 @@ def create_app(config_name):
     global log
 
     #set up logging
-    LOG_FILENAME = os.path.join(sys.path[0], app_config[config_name].STATIC_PATH, 'log/rr-log.txt')
+    LOG_FILENAME = os.path.join(sys.path[0], app_config[config_name].STATIC_PATH, 'log/ib-log.txt')
     try:
         log_level = getattr(logging, app_config[config_name].LOG_LEVEL)
     except:
@@ -71,7 +71,7 @@ def create_app(config_name):
     log_handler.setFormatter(log_formatter)
     log.addHandler(log_handler)
 
-    log.info('start RR')
+    log.info('start IB')
 
     app.config.from_object(app_config[config_name])
     app.config.from_pyfile('config.py')
@@ -108,14 +108,11 @@ def create_app(config_name):
         from .auth import auth as auth_blueprint
         app.register_blueprint(auth_blueprint)
 
-        from .settings import settings as settings_blueprint
-        app.register_blueprint(settings_blueprint)
-
         from .user import user as user_blueprint
         app.register_blueprint(user_blueprint)
 
-        from .registration import registration as registration_blueprint
-        app.register_blueprint(registration_blueprint)
+        from .overview import overview as overview_blueprint
+        app.register_blueprint(overview_blueprint)
 
         @app.errorhandler(403)
         def forbidden(error):

@@ -7,65 +7,20 @@
 
 {% block content2 %}
  <div class="content-section">
-  {{ utils.flashed_messages() }}
+    {{ utils.flashed_messages() }}
 
-             <div id="calendar" class="calendar"></div>
+    <div id="calendar" class="calendar"></div>
 
     <div class="center" id="flash_registration">
         <div class="container">
-            <div class="col-sm-3">
-                <div class="form-group row">
-                    <table class="table">
-                        <thead>
-                            <tr><th>Reeks</th><th>Timer</th><th>Tijd</th></tr>
-                        </thead>
-                        <tbody>
-                        {% for s in series %}
-                            <tr>
-                                <td>{{s.name}}</td>
-                                <td>
-                                    <a id="start_{{s.id}}" href="javascript:start_timer({{s.id}})" style="color:{% if s.running %}red{% else %}green{% endif %}">
-                                        START</a>
-                                    <a id="reset_{{s.id}}" href="javascript:reset_timer({{s.id}})" style="color:black">
-                                        RESET</a>
-                                </td>
-                                <td><div id="timer_{{s.id}}">{{s.current_time}}</div></td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                     </table>
-                </div>
-
-                <div class="form-group row">
-                    <form method="post" enctype=multipart/form-data accept-charset="UTF-8" action="{{ url_for('registration.register') }}">
-                        <label for="code" id="code_label">Leerlingcode</label>
-                        <input type="text" class="form-control" id="code" name="code" value="{{barcode}}" autofocus>
-                        <input class="btn btn-default" type="submit" id="register" style="display: none;" value="TEST">
-                    </form>
-                </div>
+            <div class="col-sm-2">
+            <input class="btn btn-default" id="clear_calendar" value="wis kalender" onclick="clear_calendar()">
+            </div>
+            <div class="col-sm-2">
+            <input class="btn btn-default" id="load_calendar" value="laad vakantiedagen" onclick="load_calendar_holidays()">
             </div>
 
-            <div class="col-sm-1"></div>
 
-            <div class="col-sm-6">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Naam</th><th>Klas</th><th>Reeks</th><th>Tijd</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for r in registrations %}
-                        <tr>
-                            <td>{{r.first_name}} {{r.last_name}}</td>
-                            <td>{{r.classgroup}}</td>
-                            <td>{{r.series.name}}</td>
-                            <td>{{r.time_ran|milliseconds_to_minutes_seconds}}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
         </div>
     </div>
  </div>
@@ -74,88 +29,64 @@
 {% block scripts %}
 {{ super() }}
 <script>
-    //when enter is pressed in the code field, a click on the button is simulated
-    //Not required anymore??
-    var input = document.getElementById("dummy");
-    if(input) {
-        input.addEventListener("keyup", function(event) {
-            event.preventDefault();
 
-            console.log(event.keyCode)
+var currentCalendarYear;
+$(window).load(function() {
 
-            if (event.keyCode === 13) {
-                document.getElementById("register").click();
+    var currentDate = new Date();
+    $('#calendar').calendar(
+        {style:'border',
+        enableRangeSelection:true,
+        language:'nl',
+        customDayRenderer: function(element, date) {
+            if (date.getDate() == currentDate.getDate() && date.getMonth() == currentDate.getMonth() && date.getYear() == currentDate.getYear()) {
+                $(element).css('font-weight', 'bold');
+                $(element).css('font-size', '15px');
+                $(element).css('color', 'blue');
             }
-        });
-    }
-
-    var time_interval = setInterval(get_timer_value, 1000);
-    function get_timer_value() {
-        $.getJSON(Flask.url_for('registration.get_timer'), function(data) {
-            $.each( data, function( key, val ) {
-                $('#timer_' + key).html(val);
-            });
-        });
-  }
-
-    function start_timer(id) {
-        $.getJSON(Flask.url_for('registration.start', {'id': id}));
-        $('#start_' + id).css("color", "red");
-        get_timer_value();
-        $("#code").focus();
-    }
-    function reset_timer(id) {
-        bootbox.confirm("Bent u zeker dat u de timer wilt resetten?", function(result) {
-            if(result) {
-                $.getJSON(Flask.url_for('registration.reset', {'id': id}));
-                $('#start_' + id).css("color", "green");
-                get_timer_value();
-            }
-             setTimeout(function() {
-                $("#code").focus();
-                }, 150);
-         });
-    }
-
-    $(window).load(function() {
-        i = document.getElementById("flash_registration").style;
-        //i.background="white";
-        if({{registration_succes}}) {
-            i.background="lightgreen";
-        } else {
-            i.background="red";
-        }
-        setTimeout(function() {i.background="white";}, 100);
-        get_timer_value();
-    });
-
-
-var currentYear = new Date().getFullYear();
-
-
-
-$('#calendar').calendar({style:'border', enableRangeSelection:true,language:'nl',
-    dataSource : [
-        {
-            id: 0,
-            name: 'test 1',
-            location: '',
-            startDate: new Date(currentYear, 3, 10),
-            endDate: new Date(currentYear, 3, 10)
         },
-        {
-            id: 1,
-            name: 'test 2',
-            location: '',
-            startDate: new Date(currentYear, 3, 12),
-            endDate: new Date(currentYear, 3, 13)
+        renderEnd: function(e) {
+            if (e.currentYear != currentCalendarYear) {
+                currentCalendarYear = e.currentYear;
+                get_calendar_data();
+            }
         }
-    ]})
+    });
+    currentCalendarYear = $('#calendar').data('calendar').getYear();
+});
 
 $('#calendar').clickDay(function(e) {
     alert(e.date + " " + $('#calendar').data('calendar').getYear());
 });
 
+function clear_calendar() {
+    alert("Kalender wissen " + currentCalendarYear);
+}
+
+function load_calendar_holidays() {
+    $.getJSON(Flask.url_for('overview.load_calendar_holidays', {'year': currentCalendarYear}), function(data) {
+        get_calendar_date();
+    });
+}
+
+function get_calendar_data() {
+    $.getJSON(Flask.url_for('overview.get_calendar_data', {'year': currentCalendarYear}), function(data) {
+        var dataSource = $('#calendar').data('calendar').getDataSource();
+        $.each( data.calendar, function(index, val ) {
+            //$('#timer_' + key).html(val);
+            var event = {
+                id: val.id,
+                name: val.name,
+                color: val.color,
+                location: val.location,
+                startDate: new Date(val.startDate),
+                endDate: new Date(val.endDate)
+            }
+            dataSource.push(event);
+        });
+        $('#calendar').data('calendar').setDataSource(dataSource);
+    });
+}
 </script>
 
 {% endblock %}

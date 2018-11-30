@@ -79,45 +79,31 @@ class Settings(db.Model):
         return '<Setting: {}/{}/{}/{}>'.format(self.id, self.name, self.value, self.type)
 
 
-class Series(db.Model):
-    __tablename__ = 'series'
+class Switches(db.Model):
+    __tablename__ = 'switches'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(256))
-    sequence = db.Column(db.Integer)
-    starttime = db.Column(db.DateTime())
-    running = db.Column(db.Boolean, default=False)
-    registration = db.relationship('Registration', cascade='all, delete', backref='series', lazy='dynamic')
+    ip = db.Column(db.String(256))
+    location = db.Column(db.String(256))
+    type = db.Column(db.String(256))
 
     def __repr__(self):
-        return u'<Series>: {}/{}/{}/{}'.format(self.id, self.name, self.sequence, self.starttime)
+        return u'<Switches>: {}/{}/{}/{}/{}'.format(self.id, self.name, self.ip, self.location, self.time)
 
     def ret_dict(self):
-        return {'id': self.id, 'name': self.name, 'sequence': self.sequence, 'starttime': self.starttime}
+        return {'id': self.id, 'name': self.name, 'ip': self.ip, 'location': self.location, 'type': self.type}
 
 
-class Registration(db.Model):
-    __tablename__ = 'registrations'
+class Schedules(db.Model):
+    __tablename__ = 'schedules'
     id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(256))
-    last_name = db.Column(db.String(256))
-    gender = db.Column(db.String(256))
-    classgroup = db.Column(db.String(256))
-    studentcode = db.Column(db.String(256), unique=True)
-    rfidcode = db.Column(db.String(256), unique=True)
-    rfidcode2 = db.Column(db.String(256), unique=True)
-    time_ran = db.Column(db.Integer)
-    time_registered = db.Column(db.DateTime())
-    series_id = db.Column(db.Integer, db.ForeignKey('series.id', ondelete='CASCADE'))
+    date = db.Column(db.Date())
+    days = db.Column(db.Integer, default=1)
 
     def __repr__(self):
-        return u'<Registration: {}/{}/{}/{}/{}/{}/{}/{}/{}'.format(self.id, self.first_name, self.last_name,
-                                                                   self.gender, self.classgroup,
-                                                         self.studentcode, self.rfidcode, self.rfidcode2, self.time_ran)
+        return u'<Schedules: {}/{}/{}'.format(self.id, self.date, self.days)
 
     def ret_dict(self):
-        return {'id':self.id, 'first_name':self.first_name, 'last_name': self.last_name, 'gender': self.gender,
-                'classgroup': self.classgroup,
-                'full_name': u'{} {}'.format(self.first_name, self.last_name), 'rfidcode': self.rfidcode, 'rfidcode2': self.rfidcode2,
-                'studentcode': self.studentcode, 'time_ran': ms2m_s_ms(self.time_ran), 'series': self.series.ret_dict()}
+        return {'id':self.id, 'date':self.date, 'days': self.days}
 
 
