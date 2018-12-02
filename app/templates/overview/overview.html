@@ -14,10 +14,10 @@
     <div class="center" id="flash_registration">
         <div class="container">
             <div class="col-sm-2">
-            <input class="btn btn-default" id="clear_calendar" value="wis kalender" onclick="clear_calendar()">
+            <input class="btn btn-default" id="clear_calendar" value="wis kalender" onclick="confirm_before_delete('Bent u zeker dat u de kalender wil wissen?', clear_calendar)">
             </div>
             <div class="col-sm-2">
-            <input class="btn btn-default" id="load_calendar" value="laad vakantiedagen" onclick="load_calendar_holidays()">
+            <input class="btn btn-default" id="load_calendar" value="laad kalender" onclick="load_calendar()">
             </div>
 
 
@@ -55,23 +55,61 @@ $(window).load(function() {
     currentCalendarYear = $('#calendar').data('calendar').getYear();
 });
 
+//Before deleting, a confirm-box is shown.
+function confirm_before_delete(message, fn) {
+    bootbox.confirm(message, function(result) {
+        if (result) {
+            fn();
+        }
+    });
+}
+
 $('#calendar').clickDay(function(e) {
-    alert(e.date + " " + $('#calendar').data('calendar').getYear());
+    if(e.events.length > 0) {
+        $.getJSON(Flask.url_for('overview.delete_event', {'id': e.events[0].id}), function(data) {
+            if(data.status) {
+                get_calendar_data();
+            } else {
+                alert('Fout: kan datum niet wissen');
+            }
+        });
+    } else {
+        $.getJSON(Flask.url_for('overview.add_event', {'date_string': e.date}), function(data) {
+            if(data.status) {
+                get_calendar_data();
+            } else {
+                alert('Fout: kan datum niet bewaren');
+            }
+        });
+
+    }
+
 });
 
 function clear_calendar() {
-    alert("Kalender wissen " + currentCalendarYear);
+    $.getJSON(Flask.url_for('overview.clear_calendar', {'year': currentCalendarYear}), function(data) {
+        if(data.status) {
+            get_calendar_data();
+        } else {
+            alert('Fout: kan kalender niet wissen');
+        }
+    });
 }
 
-function load_calendar_holidays() {
-    $.getJSON(Flask.url_for('overview.load_calendar_holidays', {'year': currentCalendarYear}), function(data) {
-        get_calendar_date();
+function load_calendar() {
+    $.getJSON(Flask.url_for('overview.load_calendar', {'year': currentCalendarYear}), function(data) {
+        if(data.status) {
+            get_calendar_data();
+        } else {
+            alert('Fout: kan kalender niet laden');
+        }
     });
 }
 
 function get_calendar_data() {
     $.getJSON(Flask.url_for('overview.get_calendar_data', {'year': currentCalendarYear}), function(data) {
-        var dataSource = $('#calendar').data('calendar').getDataSource();
+        //var dataSource = $('#calendar').data('calendar').getDataSource();
+        var dataSource = [];
         $.each( data.calendar, function(index, val ) {
             //$('#timer_' + key).html(val);
             var event = {
