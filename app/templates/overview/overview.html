@@ -19,11 +19,52 @@
             <div class="col-sm-2">
             <input class="btn btn-default" id="load_calendar" value="laad kalender" onclick="load_calendar()">
             </div>
-
-
+        </div>
+        <div class="container">
+            <h1>Schakelaars:</h1>
+            <table cellspacing="0" class="table table-striped table-bordered " id="switches_table" width="100%">
+            <thead><tr>
+                <th>Naam</th><th>IP</th><th>Locatie</th><th>Status</th>
+            </thead>
+            </table>
+            <button type="button" class="btn btn-default" data-toggle="modal" data-target="#myModal">Niewe schakelaar</button>
+            <!-- Modal -->
+            <div class="modal fade" id="myModal" role="dialog">
+                <div class="modal-dialog">
+                  <!-- Modal content-->
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <button type="button" class="close" id="dismiss_modal" data-dismiss="modal">&times;</button>
+                      <h4 class="modal-title">Nieuwe schakelaar</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="switch_name">Naam </label>
+                            <input type="text" class="form-control" id="switch_name" value="sonoff">
+                        </div>
+                        <div class="form-group">
+                            <label for="switch_ip">IP </label>
+                            <input type="text" class="form-control" id="switch_ip" value="">
+                        </div>
+                        <div class="form-group">
+                            <label for="switch_location">Locatie </label>
+                            <input type="text" class="form-control" id="switch_location" value="">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button id="close_modal" type="button" class="btn btn-default" data-dismiss="modal">Bewaar</button>
+                    </div>
+                  </div>
+                </div>
+            </div>
         </div>
     </div>
  </div>
+
+<div id="menu">
+        <a style="width:200px;font-size:13px" id="menu1" onclick="handle_floating_menu('edit')">Pas aan</a>
+        <a style="width:200px;font-size:13px" id="menu2" onclick="handle_floating_menu('delete')">Verwijder</a>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -31,7 +72,26 @@
 <script>
 
 var currentCalendarYear;
+var switch_table;
+var row_id;
 $(window).load(function() {
+
+    $('#myModal').on('hide.bs.modal', function (e) {
+       var button_pushed = document.activeElement.id;
+       if (button_pushed == 'close_modal') {
+            $.getJSON(Flask.url_for('overview.add_switch',
+                {'name': $('#switch_name').val(),
+                'ip': $('#switch_ip').val(),
+                'location':$('#switch_location').val()}),
+                function(data) {
+                    if(data.status) {
+                        load_switch_table();
+                    } else {
+                        alert('Fout: kan schakelaar niet toevoegen');
+                    }
+                });
+       }
+    });
 
     var currentDate = new Date();
     $('#calendar').calendar(
@@ -53,7 +113,53 @@ $(window).load(function() {
         }
     });
     currentCalendarYear = $('#calendar').data('calendar').getYear();
+
+    //Configure switches table
+    switch_table = $('#switches_table').DataTable({
+        'ordering': false,
+        serverSide: true,
+        stateSave: true,
+        dom : 't',
+        ajax: {
+            url: Flask.url_for('{{"overview.switches_data"}}'),
+            type: 'POST'
+        },
+        "columns": [
+            {name: 'Naam', data: 'name'},
+            {name: 'IP', data: 'ip'},
+            {name: 'Locatie', data: 'location'},
+            {name: 'Status', data: 'status'},
+        ],
+        "language" : {"url" : "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Dutch.json"}
+    });
+
+
+    //right click on an item in the table.  A menu pops up to execute an action on the selected row/item
+    var i = document.getElementById("menu").style;
+    document.getElementById("switches_table").addEventListener('contextmenu', function(e) {
+        var posX = e.clientX;
+        var posY = e.clientY;
+        menu(posX, posY);
+        e.preventDefault();
+        row_id = $(e.target).closest('tr').prop('id');
+    }, false);
+    document.addEventListener('click', function(e) {
+        i.opacity = "0";
+        setTimeout(function() {i.visibility = "hidden";}, 1);
+    }, false);
+
+    function menu(x, y) {
+      i.top = y + "px";
+      i.left = x + "px";
+      i.width = "200px";
+      i.visibility = "visible";
+      i.opacity = "1";
+    }
 });
+
+function load_switch_table() {
+    switch_table.ajax.reload();
+}
 
 //Before deleting, a confirm-box is shown.
 function confirm_before_delete(message, fn) {
@@ -124,6 +230,31 @@ function get_calendar_data() {
         });
         $('#calendar').data('calendar').setDataSource(dataSource);
     });
+}
+
+function switch_click(id) {
+    var status = document.getElementById("switch" + id).checked;
+    $.getJSON(Flask.url_for('overview.change_switch_status', {'id': id, 'status': status}), function(data) {
+    });
+}
+
+function handle_floating_menu(menu_id) {
+    if(menu_id=='edit') {
+        alert('edit an entry ' + row_id);
+    } else if (menu_id=='delete') {
+        bootbox.confirm('Bent u zeker dat u deze schakelaar wilt wissen?', function(result) {
+        if (result) {
+            $.getJSON(Flask.url_for('overview.delete_switch', {'id': row_id}), function(data) {
+                if(data.status) {
+                    load_switch_table();
+                } else {
+                    alert('Fout: kan schakelaar niet wissen');
+                }
+            });
+
+        }
+    });
+    }
 }
 </script>
 
