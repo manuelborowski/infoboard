@@ -10,6 +10,7 @@ class Config(object):
     STATIC_PATH = "app/static"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     LOG_LEVEL = "INFO"
+    MQTT_SERVER = "localhost"
 
 class DevelopmentConfig(Config):
     """

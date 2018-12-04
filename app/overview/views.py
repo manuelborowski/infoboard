@@ -6,7 +6,8 @@ from flask_login import login_required, current_user
 from .. import db, log
 from . import overview
 from ..models import  Schedules, Switches
-from ..base import build_filter, get_ajax_table
+from ..base import set_global_setting_time_start, get_global_setting_time_start, set_global_setting_time_stop, \
+    get_global_setting_time_stop, set_global_setting_time_stop_wednesday, get_global_setting_time_stop_wednesday
 from ..tables_config import  tables_configuration
 from .forms import AddForm, EditForm
 
@@ -168,8 +169,6 @@ def switches_data():
         switches_list = Switches.query.all()
         switches_dict = [i.ret_dict() for i in switches_list]
         for i in xrange(len(switches_dict)):
-            #switches_dict[i]['status'] = '<a href="/overview/show">' + str(switches_dict[i]['status']) + '</a>'
-
             switches_dict[i]['status'] = '<input type="checkbox" id="switch{}" value="1" {} onclick="switch_click({})">'\
                 .format(switches_dict[i]['id'], 'checked' if switches_dict[i]['status'] else '',switches_dict[i]['id'] )
             switches_dict[i]['DT_RowId'] = switches_dict[i]['id']
@@ -182,12 +181,25 @@ def switches_data():
     output['data'] = switches_dict
     return jsonify(output)
 
+#This route is called to get the data from a single switch
+@overview.route('/overview/switch_data/<int:id>', methods=['GET', 'POST'])
+@login_required
+def switch_data(id):
+    log.info('Get the data from switch {}'.format(id))
+    try:
+        switch = Switches.query.get_or_404(id)
+        switch_dict = switch.ret_dict()
+    except Exception as e:
+        log.error('could not get the data of switch {}'.format(id))
+        return jsonify({"status" : False})
+    return jsonify({"status" : True, "switch": switch_dict})
+
 @overview.route('/overview/change_switch_status/<int:id>/<string:status>', methods=['GET', 'POST'])
 @login_required
 def change_switch_status(id, status):
     log.info('Change switch {} to status {}'.format(id, status))
     try:
-        switch = Switches.query.get_or_404(id);
+        switch = Switches.query.get_or_404(id)
         switch.status = True if status == 'true' else False
         db.session.commit()
     except Exception as e:
@@ -216,6 +228,23 @@ def add_switch(name, ip, location):
 
     return jsonify({"status" : True})
 
+#edit a switch
+@overview.route('/overview/edit_switch/<int:id>/<string:name>/<string:ip>/<string:location>', methods=['GET', 'POST'])
+@login_required
+def edit_switch(id, name, ip, location):
+    log.info('edit a switch: {}/{}/{}/{}'.format(id, name, ip, location))
+    try:
+        switch = Switches.query.get_or_404(id)
+        switch.name = name
+        switch.ip = ip
+        switch.location = location
+        db.session.commit()
+    except Exception as e:
+        log.error('could not  edit the switch')
+        return jsonify({"status" : False})
+
+    return jsonify({"status" : True})
+
 @overview.route('/overview/delete_switch/<int:id>', methods=['GET', 'POST'])
 @login_required
 def delete_switch(id):
@@ -229,4 +258,35 @@ def delete_switch(id):
         return jsonify({"status" : False})
 
     return jsonify({"status" : True})
+
+#save settings
+@overview.route('/overview/save_settings/<string:start_time>/<string:stop_time>/<string:stop_time_wednesday>', methods=['GET', 'POST'])
+@login_required
+def save_settings(start_time, stop_time, stop_time_wednesday):
+    log.info('save settings: {}/{}/{}'.format(start_time, stop_time, stop_time_wednesday))
+    try:
+        set_global_setting_time_start(start_time)
+        set_global_setting_time_stop(stop_time)
+        set_global_setting_time_stop_wednesday(stop_time_wednesday)
+    except Exception as e:
+        log.error('could not save the settings')
+        return jsonify({"status" : False})
+
+    return jsonify({"status" : True})
+
+#get the settings
+@overview.route('/overview/get_settings', methods=['GET', 'POST'])
+@login_required
+def get_settings():
+    log.info('Get the settings from the database')
+    try:
+        settings = {
+            'start_time': get_global_setting_time_start(),
+            'stop_time': get_global_setting_time_stop(),
+            'stop_time_wednesday': get_global_setting_time_stop_wednesday()
+        }
+    except Exception as e:
+        log.error('could not get the settings')
+        return jsonify({"status" : False})
+    return jsonify({"status" : True, "switch": settings})
 

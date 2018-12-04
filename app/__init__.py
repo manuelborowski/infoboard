@@ -13,6 +13,7 @@ from werkzeug.routing import IntegerConverter as OrigIntegerConvertor
 import config, logging, logging.handlers, os, sys
 import flask_excel as excel
 import random
+from .mqtt import Mqtt
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -53,10 +54,12 @@ def ms2m_s_ms(value):
     else:
         return None
 
+mqtt = None
 
 def create_app(config_name):
     global app
     global log
+    global mqtt
 
     #set up logging
     LOG_FILENAME = os.path.join(sys.path[0], app_config[config_name].STATIC_PATH, 'log/ib-log.txt')
@@ -95,6 +98,9 @@ def create_app(config_name):
         login_manager.login_view = 'auth.login'
 
         migrate = Migrate(app, db)
+
+        mqtt = Mqtt(app, log)
+        mqtt.start()
 
         from app import models
 

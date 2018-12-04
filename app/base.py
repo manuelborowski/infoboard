@@ -226,6 +226,35 @@ def get_global_setting_current_schoolyear():
 def set_global_setting_current_schoolyear(value):
     return set_setting('current_schoolyear', str(value), 1)
 
+def get_global_setting_time_start():
+    found, value = get_setting('time_start', 1)
+    if found: return value
+    add_setting('time_start', '08:00', Settings.SETTING_TYPE.E_STRING, 1)
+    return '08:00'
+
+def set_global_setting_time_start(value):
+    return set_setting('time_start', str(value), 1)
+
+def get_global_setting_time_stop():
+    found, value = get_setting('time_stop', 1)
+    if found: return value
+    add_setting('time_stop', '16:30', Settings.SETTING_TYPE.E_STRING, 1)
+    return '16:30'
+
+def set_global_setting_time_stop(value):
+    return set_setting('time_stop', str(value), 1)
+
+def get_global_setting_time_stop_wednesday():
+    found, value = get_setting('time_stop_wednesday', 1)
+    if found: return value
+    add_setting('time_stop_wednesday', '12:30', Settings.SETTING_TYPE.E_STRING, 1)
+    return '12:30'
+
+def set_global_setting_time_stop_wednesday(value):
+    return set_setting('time_stop_wednesday', str(value), 1)
+
+
+
 ######################################################################################################
 ###                                       Utility functions
 ######################################################################################################

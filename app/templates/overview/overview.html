@@ -6,56 +6,74 @@
 {% extends "base.html" %}
 
 {% block content2 %}
- <div class="content-section">
-    {{ utils.flashed_messages() }}
-
-    <div id="calendar" class="calendar"></div>
-
-    <div class="center" id="flash_registration">
-        <div class="container">
-            <div class="col-sm-2">
-            <input class="btn btn-default" id="clear_calendar" value="wis kalender" onclick="confirm_before_delete('Bent u zeker dat u de kalender wil wissen?', clear_calendar)">
-            </div>
-            <div class="col-sm-2">
-            <input class="btn btn-default" id="load_calendar" value="laad kalender" onclick="load_calendar()">
-            </div>
+<div class="content-section">
+    <div class="container">
+        <h1>Kalender:</h1>
+        <div id="calendar" class="calendar"></div>
+        <div class="col-sm-2">
+        <input class="btn btn-default" id="clear_calendar" value="wis kalender" onclick="confirm_before_delete('Bent u zeker dat u de kalender wil wissen?', clear_calendar)">
         </div>
-        <div class="container">
-            <h1>Schakelaars:</h1>
-            <table cellspacing="0" class="table table-striped table-bordered " id="switches_table" width="100%">
-            <thead><tr>
-                <th>Naam</th><th>IP</th><th>Locatie</th><th>Status</th>
-            </thead>
-            </table>
-            <button type="button" class="btn btn-default" data-toggle="modal" data-target="#myModal">Niewe schakelaar</button>
-            <!-- Modal -->
-            <div class="modal fade" id="myModal" role="dialog">
-                <div class="modal-dialog">
-                  <!-- Modal content-->
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <button type="button" class="close" id="dismiss_modal" data-dismiss="modal">&times;</button>
-                      <h4 class="modal-title">Nieuwe schakelaar</h4>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label for="switch_name">Naam </label>
-                            <input type="text" class="form-control" id="switch_name" value="sonoff">
-                        </div>
-                        <div class="form-group">
-                            <label for="switch_ip">IP </label>
-                            <input type="text" class="form-control" id="switch_ip" value="">
-                        </div>
-                        <div class="form-group">
-                            <label for="switch_location">Locatie </label>
-                            <input type="text" class="form-control" id="switch_location" value="">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                      <button id="close_modal" type="button" class="btn btn-default" data-dismiss="modal">Bewaar</button>
-                    </div>
-                  </div>
+        <div class="col-sm-2">
+        <input class="btn btn-default" id="load_calendar" value="laad kalender" onclick="load_calendar()">
+        </div>
+    </div>
+    <div class="container">
+        <h1>Instellingen:</h1>
+        <div class="col-sm-3">
+        <div class="input-group">
+            <span class="input-group-addon">Starttijd infoborden</span>
+            <input id="start_time" type="text" class="form-control" name="msg" value="">
+        </div>
+        </div>
+        <div class="col-sm-3">
+        <div class="input-group">
+            <span class="input-group-addon">Stoptijd infoborden</span>
+            <input id="stop_time" type="text" class="form-control" name="msg" value="">
+        </div>
+        </div>
+        <div class="col-sm-4">
+        <div class="input-group">
+            <span class="input-group-addon">Stoptijd infoborden op woensdag</span>
+            <input id="stop_time_wednesday" type="text" class="form-control" name="msg" value="">
+        </div>
+        </div>
+        <button type="button" class="btn btn-default" data-toggle="modal" onclick="save_settings()">Bewaar</button>
+    </div>
+    <div class="container">
+        <h1>Schakelaars:</h1>
+        <table cellspacing="0" class="table table-striped table-bordered " id="switches_table" width="100%">
+        <thead><tr>
+            <th>Naam</th><th>IP</th><th>Locatie</th><th>Status</th>
+        </thead>
+        </table>
+        <button type="button" class="btn btn-default" data-toggle="modal" onclick="add_switch()">Nieuwe schakelaar</button>
+        <!-- Modal -->
+        <div class="modal fade" id="myModal" role="dialog">
+            <div class="modal-dialog">
+              <!-- Modal content-->
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" id="dismiss_modal" data-dismiss="modal">&times;</button>
+                  <h4 class="modal-title" id="modal_title"></h4>
                 </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="switch_name">Naam </label>
+                        <input type="text" class="form-control" id="switch_name" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="switch_ip">IP </label>
+                        <input type="text" class="form-control" id="switch_ip" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="switch_location">Locatie </label>
+                        <input type="text" class="form-control" id="switch_location" value="">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                  <button id="close_modal" type="button" class="btn btn-default" data-dismiss="modal">Bewaar</button>
+                </div>
+              </div>
             </div>
         </div>
     </div>
@@ -69,193 +87,6 @@
 
 {% block scripts %}
 {{ super() }}
-<script>
-
-var currentCalendarYear;
-var switch_table;
-var row_id;
-$(window).load(function() {
-
-    $('#myModal').on('hide.bs.modal', function (e) {
-       var button_pushed = document.activeElement.id;
-       if (button_pushed == 'close_modal') {
-            $.getJSON(Flask.url_for('overview.add_switch',
-                {'name': $('#switch_name').val(),
-                'ip': $('#switch_ip').val(),
-                'location':$('#switch_location').val()}),
-                function(data) {
-                    if(data.status) {
-                        load_switch_table();
-                    } else {
-                        alert('Fout: kan schakelaar niet toevoegen');
-                    }
-                });
-       }
-    });
-
-    var currentDate = new Date();
-    $('#calendar').calendar(
-        {style:'border',
-        enableRangeSelection:true,
-        language:'nl',
-        customDayRenderer: function(element, date) {
-            if (date.getDate() == currentDate.getDate() && date.getMonth() == currentDate.getMonth() && date.getYear() == currentDate.getYear()) {
-                $(element).css('font-weight', 'bold');
-                $(element).css('font-size', '15px');
-                $(element).css('color', 'blue');
-            }
-        },
-        renderEnd: function(e) {
-            if (e.currentYear != currentCalendarYear) {
-                currentCalendarYear = e.currentYear;
-                get_calendar_data();
-            }
-        }
-    });
-    currentCalendarYear = $('#calendar').data('calendar').getYear();
-
-    //Configure switches table
-    switch_table = $('#switches_table').DataTable({
-        'ordering': false,
-        serverSide: true,
-        stateSave: true,
-        dom : 't',
-        ajax: {
-            url: Flask.url_for('{{"overview.switches_data"}}'),
-            type: 'POST'
-        },
-        "columns": [
-            {name: 'Naam', data: 'name'},
-            {name: 'IP', data: 'ip'},
-            {name: 'Locatie', data: 'location'},
-            {name: 'Status', data: 'status'},
-        ],
-        "language" : {"url" : "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Dutch.json"}
-    });
-
-
-    //right click on an item in the table.  A menu pops up to execute an action on the selected row/item
-    var i = document.getElementById("menu").style;
-    document.getElementById("switches_table").addEventListener('contextmenu', function(e) {
-        var posX = e.clientX;
-        var posY = e.clientY;
-        menu(posX, posY);
-        e.preventDefault();
-        row_id = $(e.target).closest('tr').prop('id');
-    }, false);
-    document.addEventListener('click', function(e) {
-        i.opacity = "0";
-        setTimeout(function() {i.visibility = "hidden";}, 1);
-    }, false);
-
-    function menu(x, y) {
-      i.top = y + "px";
-      i.left = x + "px";
-      i.width = "200px";
-      i.visibility = "visible";
-      i.opacity = "1";
-    }
-});
-
-function load_switch_table() {
-    switch_table.ajax.reload();
-}
-
-//Before deleting, a confirm-box is shown.
-function confirm_before_delete(message, fn) {
-    bootbox.confirm(message, function(result) {
-        if (result) {
-            fn();
-        }
-    });
-}
-
-$('#calendar').clickDay(function(e) {
-    if(e.events.length > 0) {
-        $.getJSON(Flask.url_for('overview.delete_event', {'id': e.events[0].id}), function(data) {
-            if(data.status) {
-                get_calendar_data();
-            } else {
-                alert('Fout: kan datum niet wissen');
-            }
-        });
-    } else {
-        $.getJSON(Flask.url_for('overview.add_event', {'date_string': e.date}), function(data) {
-            if(data.status) {
-                get_calendar_data();
-            } else {
-                alert('Fout: kan datum niet bewaren');
-            }
-        });
-
-    }
-
-});
-
-function clear_calendar() {
-    $.getJSON(Flask.url_for('overview.clear_calendar', {'year': currentCalendarYear}), function(data) {
-        if(data.status) {
-            get_calendar_data();
-        } else {
-            alert('Fout: kan kalender niet wissen');
-        }
-    });
-}
-
-function load_calendar() {
-    $.getJSON(Flask.url_for('overview.load_calendar', {'year': currentCalendarYear}), function(data) {
-        if(data.status) {
-            get_calendar_data();
-        } else {
-            alert('Fout: kan kalender niet laden');
-        }
-    });
-}
-
-function get_calendar_data() {
-    $.getJSON(Flask.url_for('overview.get_calendar_data', {'year': currentCalendarYear}), function(data) {
-        //var dataSource = $('#calendar').data('calendar').getDataSource();
-        var dataSource = [];
-        $.each( data.calendar, function(index, val ) {
-            //$('#timer_' + key).html(val);
-            var event = {
-                id: val.id,
-                name: val.name,
-                color: val.color,
-                location: val.location,
-                startDate: new Date(val.startDate),
-                endDate: new Date(val.endDate)
-            }
-            dataSource.push(event);
-        });
-        $('#calendar').data('calendar').setDataSource(dataSource);
-    });
-}
-
-function switch_click(id) {
-    var status = document.getElementById("switch" + id).checked;
-    $.getJSON(Flask.url_for('overview.change_switch_status', {'id': id, 'status': status}), function(data) {
-    });
-}
-
-function handle_floating_menu(menu_id) {
-    if(menu_id=='edit') {
-        alert('edit an entry ' + row_id);
-    } else if (menu_id=='delete') {
-        bootbox.confirm('Bent u zeker dat u deze schakelaar wilt wissen?', function(result) {
-        if (result) {
-            $.getJSON(Flask.url_for('overview.delete_switch', {'id': row_id}), function(data) {
-                if(data.status) {
-                    load_switch_table();
-                } else {
-                    alert('Fout: kan schakelaar niet wissen');
-                }
-            });
-
-        }
-    });
-    }
-}
-</script>
+<script type="text/javascript" > {% include "overview/overview.js" %}</script>
 
 {% endblock %}
