@@ -11,7 +11,7 @@ from ..base import set_global_setting_time_start, get_global_setting_time_start,
 from ..tables_config import  tables_configuration
 from .forms import AddForm, EditForm
 
-import cStringIO, csv, re, datetime, time
+import cStringIO, csv, re, datetime, time, json
 from datetime import date, datetime, timedelta
 
 from sqlalchemy.exc import IntegrityError
@@ -289,4 +289,30 @@ def get_settings():
         log.error('could not get the settings')
         return jsonify({"status" : False})
     return jsonify({"status" : True, "switch": settings})
+
+
+@overview.route('/overview/rest_switches_data', methods=['GET', 'POST'])
+def rest_switches_data():
+    log.info('Get the switches data from the database and display')
+    switches_dict = {}
+    try:
+        switches_list = Switches.query.all()
+        switches_dict = [i.ret_dict() for i in switches_list]
+    except Exception as e:
+        log.error('could not retreive the switches from the database')
+
+    return jsonify({'switch' : switches_dict})
+
+@overview.route('/overview/rest_switch_alive/<string:status>', methods=['GET', 'POST'])
+def rest_switch_alive(status):
+    log.info('Get the switches data from the database and display')
+    try:
+        sd = json.loads(status)
+        print(sd)
+        for s in sd['status']:
+            print(s['name'], s['status'])
+    except Exception as e:
+        log.error('could not retreive the switches from the database')
+
+    return jsonify({'status' : True})
 
