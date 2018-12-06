@@ -101,6 +101,7 @@ def create_app(config_name):
 
         mqtt = Mqtt(app, log)
         mqtt.start()
+        mqtt.subscribe_to_switches()
 
         from app import models
 

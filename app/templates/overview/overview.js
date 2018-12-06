@@ -101,7 +101,25 @@ $(window).load(function() {
     }
 
     get_settings();
+
+    check_switch_hb();
+    setInterval(check_switch_hb, 5000);
+
 });
+
+function check_switch_hb() {
+    $.getJSON(Flask.url_for('overview.check_switch_hb'), function(data) {
+        $.each( data.switch_list, function(index, val ) {
+            if(val.status) {
+                $('#' + val.id).css("background-color", "palegreen");
+            } else {
+                $('#' + val.id).css("background-color", "salmon");
+            }
+
+        });
+    });
+}
+
 
 function load_switch_table() {
     switch_table.ajax.reload();

@@ -3,7 +3,7 @@
 from flask import render_template, redirect, url_for, request, flash, send_file, session, jsonify
 from flask_login import login_required, current_user
 
-from .. import db, log
+from .. import db, log, mqtt
 from . import overview
 from ..models import  Schedules, Switches
 from ..base import set_global_setting_time_start, get_global_setting_time_start, set_global_setting_time_stop, \
@@ -172,6 +172,7 @@ def switches_data():
             switches_dict[i]['status'] = '<input type="checkbox" id="switch{}" value="1" {} onclick="switch_click({})">'\
                 .format(switches_dict[i]['id'], 'checked' if switches_dict[i]['status'] else '',switches_dict[i]['id'] )
             switches_dict[i]['DT_RowId'] = switches_dict[i]['id']
+            #mqtt.subscribe_client(switches_dict[i]['name'])
     except Exception as e:
         log.error('could not retreive the switches from the database')
 
@@ -259,6 +260,17 @@ def delete_switch(id):
 
     return jsonify({"status" : True})
 
+@overview.route('/overview/check_switch_hb', methods=['GET', 'POST'])
+@login_required
+def check_switch_hb():
+    sl = Switches.query.all()
+    switch_list = []
+    for s in sl:
+        status = mqtt.check_hb_counter(s.name)
+        print(s.name, status)
+        switch_list.append({'name': s.name, 'id': s.id, 'status': status})
+    return jsonify({"switch_list" : switch_list})
+
 #save settings
 @overview.route('/overview/save_settings/<string:start_time>/<string:stop_time>/<string:stop_time_wednesday>', methods=['GET', 'POST'])
 @login_required
@@ -293,7 +305,7 @@ def get_settings():
 
 @overview.route('/overview/rest_switches_data', methods=['GET', 'POST'])
 def rest_switches_data():
-    log.info('Get the switches data from the database and display')
+    log.info('Get the switches data from the database')
     switches_dict = {}
     try:
         switches_list = Switches.query.all()
@@ -303,16 +315,15 @@ def rest_switches_data():
 
     return jsonify({'switch' : switches_dict})
 
-@overview.route('/overview/rest_switch_alive/<string:status>', methods=['GET', 'POST'])
-def rest_switch_alive(status):
-    log.info('Get the switches data from the database and display')
+@overview.route('/overview/rest_switch_alive/<string:switch>', methods=['GET', 'POST'])
+def rest_switch_alive(switch):
+    log.info('indicate a switch is still alive: {}'.format(switch))
     try:
-        sd = json.loads(status)
-        print(sd)
-        for s in sd['status']:
-            print(s['name'], s['status'])
+        s = json.loads(switch)
+        print(s['name'] + ' is still alive')
     except Exception as e:
-        log.error('could not retreive the switches from the database')
+        log.error('error, could not get the status of the switch ')
+        return jsonify({'status' : False})
 
     return jsonify({'status' : True})
 
