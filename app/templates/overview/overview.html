@@ -19,31 +19,45 @@
     </div>
     <div class="container">
         <h1>Instellingen:</h1>
-        <div class="col-sm-3">
-        <div class="input-group">
-            <span class="input-group-addon">Starttijd infoborden</span>
-            <input id="start_time" type="text" class="form-control" name="msg" value="">
+        <div class="row">
+            <div class="col-sm-3">
+            <div class="input-group">
+                <span class="input-group-addon">Starttijd infoborden</span>
+                <input id="start_time" type="text" class="form-control" name="msg" value="">
+            </div>
+            </div>
+            <div class="col-sm-3">
+            <div class="input-group">
+                <span class="input-group-addon">Stoptijd infoborden</span>
+                <input id="stop_time" type="text" class="form-control" name="msg" value="">
+            </div>
+            </div>
+            <div class="col-sm-4">
+            <div class="input-group">
+                <span class="input-group-addon">Stoptijd infoborden op woensdag</span>
+                <input id="stop_time_wednesday" type="text" class="form-control" name="msg" value="">
+            </div>
+            </div>
         </div>
+        <div class="row">
+            <div class="col-sm-3">
+            <div class="input-group">
+                <span class="input-group-addon">Schakelaars automatisch schakelen</span>
+                <input type="checkbox" id="auto_switch" class="form-control">
+            </div>
+            </div>
         </div>
-        <div class="col-sm-3">
-        <div class="input-group">
-            <span class="input-group-addon">Stoptijd infoborden</span>
-            <input id="stop_time" type="text" class="form-control" name="msg" value="">
+        <div class="row">
+            <div class="col-sm-3">
+            <button type="button" class="btn btn-default" data-toggle="modal" onclick="save_settings()">Bewaar</button>
+            </div>
         </div>
-        </div>
-        <div class="col-sm-4">
-        <div class="input-group">
-            <span class="input-group-addon">Stoptijd infoborden op woensdag</span>
-            <input id="stop_time_wednesday" type="text" class="form-control" name="msg" value="">
-        </div>
-        </div>
-        <button type="button" class="btn btn-default" data-toggle="modal" onclick="save_settings()">Bewaar</button>
     </div>
     <div class="container">
         <h1>Schakelaars:</h1>
         <table cellspacing="0" class="table table-striped table-bordered " id="switches_table" width="100%">
         <thead><tr>
-            <th>Naam</th><th>IP</th><th>Locatie</th><th>Status</th>
+            <th>Naam</th><th>IP</th><th>Locatie</th><th>Aan/uit</th><th>Status</th>
         </thead>
         </table>
         <button type="button" class="btn btn-default" data-toggle="modal" onclick="add_switch()">Nieuwe schakelaar</button>

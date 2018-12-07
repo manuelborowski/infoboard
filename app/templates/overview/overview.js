@@ -72,7 +72,8 @@ $(window).load(function() {
             {name: 'Naam', data: 'name'},
             {name: 'IP', data: 'ip'},
             {name: 'Locatie', data: 'location'},
-            {name: 'Status', data: 'status'},
+            {name: 'Aan/uit', data: 'status'},
+            {name: 'Status', data: 'get_status'},
         ],
         "language" : {"url" : "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Dutch.json"}
     });
@@ -102,20 +103,20 @@ $(window).load(function() {
 
     get_settings();
 
-    check_switch_hb();
-    setInterval(check_switch_hb, 5000);
+    setTimeout(function() {
+        check_switch_hb_status();
+    }, 1000);
+    setInterval(check_switch_hb_status, 5000);
 
 });
 
-function check_switch_hb() {
-    $.getJSON(Flask.url_for('overview.check_switch_hb'), function(data) {
+function check_switch_hb_status() {
+    $.getJSON(Flask.url_for('overview.check_switch_hb_status'), function(data) {
         $.each( data.switch_list, function(index, val ) {
-            if(val.status) {
-                $('#' + val.id).css("background-color", "palegreen");
-            } else {
-                $('#' + val.id).css("background-color", "salmon");
-            }
-
+            hb_color = val.hb ? "palegreen" : "salmon";
+            $('#' + val.id).css("background-color", hb_color);
+            status_text = val.status ? "AAN" : "UIT"
+            $('#get_status' + val.id).text(status_text);
         });
     });
 }
@@ -202,6 +203,18 @@ function switch_click(id) {
     });
 }
 
+function toggle_switch(id) {
+    $.getJSON(Flask.url_for('overview.toggle_switch', {'id': id}), function(data) {
+        if(data.status) {
+            setTimeout(function() {
+                check_switch_hb_status();
+            }, 1000);
+        } else {
+            alert('Fout: kan status van de schakelaar niet veranderen');
+        }
+    });
+}
+
 function add_switch() {
     switch_action = 'add';
     $('#switch_name').val('');
@@ -246,10 +259,13 @@ function handle_floating_menu(menu_id) {
 }
 
 function save_settings() {
-    $.getJSON(Flask.url_for('overview.save_settings',
-        {'start_time': $('#start_time').val(),
+    var settings = {
+        'start_time': $('#start_time').val(),
         'stop_time': $('#stop_time').val(),
-        'stop_time_wednesday':$('#stop_time_wednesday').val()}),
+        'stop_time_wednesday':$('#stop_time_wednesday').val(),
+        'auto_switch': document.getElementById("auto_switch").checked
+    }
+    $.getJSON(Flask.url_for('overview.save_settings', {'settings' : JSON.stringify(settings)}),
         function(data) {
             if(data.status) {
                 alert('Instellingen zijn bewaard');

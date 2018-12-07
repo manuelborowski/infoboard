@@ -253,6 +253,15 @@ def get_global_setting_time_stop_wednesday():
 def set_global_setting_time_stop_wednesday(value):
     return set_setting('time_stop_wednesday', str(value), 1)
 
+def get_global_setting_auto_switch():
+    found, value = get_setting('auto_switch', 1)
+    if found: return value
+    add_setting('auto_switch', True, Settings.SETTING_TYPE.E_BOOL, 1)
+    return True
+
+def set_global_setting_auto_switch(value):
+    return set_setting('auto_switch', bool(value), 1)
+
 
 
 ######################################################################################################

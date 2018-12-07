@@ -7,7 +7,8 @@ from .. import db, log, mqtt
 from . import overview
 from ..models import  Schedules, Switches
 from ..base import set_global_setting_time_start, get_global_setting_time_start, set_global_setting_time_stop, \
-    get_global_setting_time_stop, set_global_setting_time_stop_wednesday, get_global_setting_time_stop_wednesday
+    get_global_setting_time_stop, set_global_setting_time_stop_wednesday, get_global_setting_time_stop_wednesday, \
+    get_global_setting_auto_switch, set_global_setting_auto_switch
 from ..tables_config import  tables_configuration
 from .forms import AddForm, EditForm
 
@@ -169,9 +170,11 @@ def switches_data():
         switches_list = Switches.query.all()
         switches_dict = [i.ret_dict() for i in switches_list]
         for i in xrange(len(switches_dict)):
-            switches_dict[i]['status'] = '<input type="checkbox" id="switch{}" value="1" {} onclick="switch_click({})">'\
-                .format(switches_dict[i]['id'], 'checked' if switches_dict[i]['status'] else '',switches_dict[i]['id'] )
+            switches_dict[i]['status'] = '<button type="button" class="btn btn-default" onclick="toggle_switch({})">Wijzig</button>'.format(switches_dict[i]['id'])
+            #switches_dict[i]['status'] = '<input type="checkbox" id="switch{}" value="1" {} onclick="switch_click({})">'\
+            #    .format(switches_dict[i]['id'], 'checked' if switches_dict[i]['status'] else '',switches_dict[i]['id'] )
             switches_dict[i]['DT_RowId'] = switches_dict[i]['id']
+            switches_dict[i]['get_status'] = '<p id="get_status{}">UIT</p>'.format(switches_dict[i]['id'])
             #mqtt.subscribe_client(switches_dict[i]['name'])
     except Exception as e:
         log.error('could not retreive the switches from the database')
@@ -195,19 +198,52 @@ def switch_data(id):
         return jsonify({"status" : False})
     return jsonify({"status" : True, "switch": switch_dict})
 
+#called by the webbrowser to change te state of the switch, NOT in the database.
+#the status in the database is changed when the actual switch announces it state (see below)
 @overview.route('/overview/change_switch_status/<int:id>/<string:status>', methods=['GET', 'POST'])
 @login_required
 def change_switch_status(id, status):
     log.info('Change switch {} to status {}'.format(id, status))
     try:
         switch = Switches.query.get_or_404(id)
-        switch.status = True if status == 'true' else False
-        db.session.commit()
+        #switch.status = True if status == 'true' else False
+        #db.session.commit()
+        mqtt.set_switch_state(switch.name, True if status == 'true' else False)
     except Exception as e:
         log.error('could not change the state of switch {} to {}'.format(id, status))
         return jsonify({"status" : False})
 
     return jsonify({"status" : True})
+
+#Toggle the state of a switch
+@overview.route('/overview/toggle_switch/<int:id>', methods=['GET', 'POST'])
+@login_required
+def toggle_switch(id):
+    log.info('Toggle switch {}'.format(id))
+    try:
+        switch = Switches.query.get_or_404(id)
+        hb_status, status = mqtt.check_switch(switch.name)
+        mqtt.set_switch_state(switch.name, not status)
+    except Exception as e:
+        log.error('could not change toggle switch {}'.format(id))
+        return jsonify({"status" : False})
+
+    return jsonify({"status" : True})
+
+#The actual state of the switch has changed, update the database accordingly
+@overview.route('/overview/rest_set_switch_status/<string:switch>', methods=['GET', 'POST'])
+def rest_set_switch_status(switch):
+    try:
+        s = json.loads(switch)
+        log.info('Switch {} changed state to {}'.format(s['name'], s['status']))
+        switch = Switches.query.filter(Switches.name==s['name']).first()
+        switch.status = s['status']
+        db.session.commit()
+    except Exception as e:
+        log.error('error, could not set the status of the switch ')
+        return jsonify({'status' : False})
+
+    return jsonify({'status' : True})
 
 
 #add a new switch
@@ -260,26 +296,28 @@ def delete_switch(id):
 
     return jsonify({"status" : True})
 
-@overview.route('/overview/check_switch_hb', methods=['GET', 'POST'])
+@overview.route('/overview/check_switch_hb_status', methods=['GET', 'POST'])
 @login_required
-def check_switch_hb():
+def check_switch_hb_status():
     sl = Switches.query.all()
     switch_list = []
     for s in sl:
-        status = mqtt.check_hb_counter(s.name)
-        print(s.name, status)
-        switch_list.append({'name': s.name, 'id': s.id, 'status': status})
+        hb, status = mqtt.check_switch(s.name)
+        print(s.name, hb, status)
+        switch_list.append({'name': s.name, 'id': s.id, 'hb': hb, 'status': status})
     return jsonify({"switch_list" : switch_list})
 
 #save settings
-@overview.route('/overview/save_settings/<string:start_time>/<string:stop_time>/<string:stop_time_wednesday>', methods=['GET', 'POST'])
+@overview.route('/overview/save_settings/<string:settings>', methods=['GET', 'POST'])
 @login_required
-def save_settings(start_time, stop_time, stop_time_wednesday):
-    log.info('save settings: {}/{}/{}'.format(start_time, stop_time, stop_time_wednesday))
+def save_settings(settings):
     try:
-        set_global_setting_time_start(start_time)
-        set_global_setting_time_stop(stop_time)
-        set_global_setting_time_stop_wednesday(stop_time_wednesday)
+        s = json.loads(settings)
+        log.info('save settings: {}/{}/{}/{}'.format(s['start_time'], s['stop_time'], s['stop_time_wednesday'], s['auto_switch']))
+        set_global_setting_time_start(s['start_time'])
+        set_global_setting_time_stop(s['stop_time'])
+        set_global_setting_time_stop_wednesday(s['stop_time_wednesday'])
+        set_global_setting_auto_switch(s['auto_switch'])
     except Exception as e:
         log.error('could not save the settings')
         return jsonify({"status" : False})
@@ -295,7 +333,8 @@ def get_settings():
         settings = {
             'start_time': get_global_setting_time_start(),
             'stop_time': get_global_setting_time_stop(),
-            'stop_time_wednesday': get_global_setting_time_stop_wednesday()
+            'stop_time_wednesday': get_global_setting_time_stop_wednesday(),
+            'auto_switch': get_global_setting_auto_switch()
         }
     except Exception as e:
         log.error('could not get the settings')
