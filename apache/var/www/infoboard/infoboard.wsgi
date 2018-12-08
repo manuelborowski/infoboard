@@ -1,7 +1,7 @@
 import sys, os
 import logging
 logging.basicConfig(stream=sys.stderr)
-sys.path.insert(0,"/home/aboro/projects/register-runner")
+sys.path.insert(0,"/home/aboro/projects/infoboard")
 
 os.putenv('FLASK_CONFIG', 'production')
 

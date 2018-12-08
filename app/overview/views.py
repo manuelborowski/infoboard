@@ -3,7 +3,7 @@
 from flask import render_template, redirect, url_for, request, flash, send_file, session, jsonify
 from flask_login import login_required, current_user
 
-from .. import db, log, mqtt
+from .. import db, log, mqtt, scheduler
 from . import overview
 from ..models import  Schedules, Switches
 from ..base import set_global_setting_time_start, get_global_setting_time_start, set_global_setting_time_stop, \
@@ -20,6 +20,13 @@ from sqlalchemy import extract, or_
 
 
 from ..google_calendar import get_holidays
+
+def send_calendar_to_scheduler():
+    print 'before', datetime.now()
+    yesterday = datetime.today() - timedelta(days=1)
+    sl = Schedules.query.filter(Schedules.date > yesterday).order_by(Schedules.date).all()
+    scheduler.set_scheduler_events(sl)
+    print 'after', datetime.now()
 
 
 #show the overview page
@@ -59,7 +66,7 @@ def get_calendar_data(year):
             'endDate': time.mktime((h.date + timedelta(days=0)).timetuple()) * 1000,
         }
         t.append(e)
-
+    send_calendar_to_scheduler()
     return jsonify({"calendar" : t})
 
 #This route is called by an ajax call to get the holidays of the current year from a google calendar
@@ -104,6 +111,7 @@ def load_calendar(year):
                 db.session.add(hd)
 
     db.session.commit()
+    send_calendar_to_scheduler()
 
     return jsonify({"status" : True})
 
@@ -118,6 +126,7 @@ def clear_calendar(year):
         for e in hl:
             db.session.delete(e)
         db.session.commit()
+        send_calendar_to_scheduler()
     except Exception as e:
         log.error('Could not delete the given calendar year: {}'.format(e))
         return jsonify({"status": False})
@@ -137,6 +146,7 @@ def add_event(date_string):
         hd = Schedules(date=date, days=1)
         db.session.add(hd)
         db.session.commit()
+        send_calendar_to_scheduler()
     except Exception as e:
         log.error('Could not save new event: {}'.format(e))
         return jsonify({"status" : False})
@@ -153,6 +163,7 @@ def delete_event(id):
         if not hd : raise Exception('event does not exist')
         db.session.delete(hd)
         db.session.commit()
+        send_calendar_to_scheduler()
     except Exception as e:
         log.error('Could not delete event: {}'.format(e))
         return jsonify({"status" : False})
@@ -171,11 +182,8 @@ def switches_data():
         switches_dict = [i.ret_dict() for i in switches_list]
         for i in xrange(len(switches_dict)):
             switches_dict[i]['status'] = '<button type="button" class="btn btn-default" onclick="toggle_switch({})">Wijzig</button>'.format(switches_dict[i]['id'])
-            #switches_dict[i]['status'] = '<input type="checkbox" id="switch{}" value="1" {} onclick="switch_click({})">'\
-            #    .format(switches_dict[i]['id'], 'checked' if switches_dict[i]['status'] else '',switches_dict[i]['id'] )
             switches_dict[i]['DT_RowId'] = switches_dict[i]['id']
             switches_dict[i]['get_status'] = '<p id="get_status{}">UIT</p>'.format(switches_dict[i]['id'])
-            #mqtt.subscribe_client(switches_dict[i]['name'])
     except Exception as e:
         log.error('could not retreive the switches from the database')
 
@@ -198,23 +206,6 @@ def switch_data(id):
         return jsonify({"status" : False})
     return jsonify({"status" : True, "switch": switch_dict})
 
-#called by the webbrowser to change te state of the switch, NOT in the database.
-#the status in the database is changed when the actual switch announces it state (see below)
-@overview.route('/overview/change_switch_status/<int:id>/<string:status>', methods=['GET', 'POST'])
-@login_required
-def change_switch_status(id, status):
-    log.info('Change switch {} to status {}'.format(id, status))
-    try:
-        switch = Switches.query.get_or_404(id)
-        #switch.status = True if status == 'true' else False
-        #db.session.commit()
-        mqtt.set_switch_state(switch.name, True if status == 'true' else False)
-    except Exception as e:
-        log.error('could not change the state of switch {} to {}'.format(id, status))
-        return jsonify({"status" : False})
-
-    return jsonify({"status" : True})
-
 #Toggle the state of a switch
 @overview.route('/overview/toggle_switch/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -222,29 +213,13 @@ def toggle_switch(id):
     log.info('Toggle switch {}'.format(id))
     try:
         switch = Switches.query.get_or_404(id)
-        hb_status, status = mqtt.check_switch(switch.name)
+        status = mqtt.check_switch_status(switch.name)
         mqtt.set_switch_state(switch.name, not status)
     except Exception as e:
         log.error('could not change toggle switch {}'.format(id))
         return jsonify({"status" : False})
 
     return jsonify({"status" : True})
-
-#The actual state of the switch has changed, update the database accordingly
-@overview.route('/overview/rest_set_switch_status/<string:switch>', methods=['GET', 'POST'])
-def rest_set_switch_status(switch):
-    try:
-        s = json.loads(switch)
-        log.info('Switch {} changed state to {}'.format(s['name'], s['status']))
-        switch = Switches.query.filter(Switches.name==s['name']).first()
-        switch.status = s['status']
-        db.session.commit()
-    except Exception as e:
-        log.error('error, could not set the status of the switch ')
-        return jsonify({'status' : False})
-
-    return jsonify({'status' : True})
-
 
 #add a new switch
 @overview.route('/overview/add_switch/<string:name>/<string:ip>/<string:location>', methods=['GET', 'POST'])
@@ -302,8 +277,8 @@ def check_switch_hb_status():
     sl = Switches.query.all()
     switch_list = []
     for s in sl:
-        hb, status = mqtt.check_switch(s.name)
-        print(s.name, hb, status)
+        hb = mqtt.check_switch_hb(s.name)
+        status = mqtt.check_switch_status(s.name)
         switch_list.append({'name': s.name, 'id': s.id, 'hb': hb, 'status': status})
     return jsonify({"switch_list" : switch_list})
 
@@ -318,6 +293,7 @@ def save_settings(settings):
         set_global_setting_time_stop(s['stop_time'])
         set_global_setting_time_stop_wednesday(s['stop_time_wednesday'])
         set_global_setting_auto_switch(s['auto_switch'])
+        scheduler.set_scheduler_settings(s)
     except Exception as e:
         log.error('could not save the settings')
         return jsonify({"status" : False})
@@ -336,32 +312,21 @@ def get_settings():
             'stop_time_wednesday': get_global_setting_time_stop_wednesday(),
             'auto_switch': get_global_setting_auto_switch()
         }
+        scheduler.set_scheduler_settings(settings)
     except Exception as e:
         log.error('could not get the settings')
         return jsonify({"status" : False})
     return jsonify({"status" : True, "switch": settings})
 
-
-@overview.route('/overview/rest_switches_data', methods=['GET', 'POST'])
-def rest_switches_data():
-    log.info('Get the switches data from the database')
-    switches_dict = {}
+@overview.route('/overview/rest_push_events/<string:message>', methods=['GET', 'POST'])
+def rest_push_events(message):
+    log.info('push the events to the scheduler')
     try:
-        switches_list = Switches.query.all()
-        switches_dict = [i.ret_dict() for i in switches_list]
+        yesterday = datetime.today()-timedelta(days=1)
+        sl = Schedules.query.filter(Schedules.date > yesterday).order_by(Schedules.date).all()
+        scheduler.set_scheduler_events(sl)
     except Exception as e:
-        log.error('could not retreive the switches from the database')
-
-    return jsonify({'switch' : switches_dict})
-
-@overview.route('/overview/rest_switch_alive/<string:switch>', methods=['GET', 'POST'])
-def rest_switch_alive(switch):
-    log.info('indicate a switch is still alive: {}'.format(switch))
-    try:
-        s = json.loads(switch)
-        print(s['name'] + ' is still alive')
-    except Exception as e:
-        log.error('error, could not get the status of the switch ')
+        log.error('error, could not push the events ')
         return jsonify({'status' : False})
 
     return jsonify({'status' : True})

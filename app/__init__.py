@@ -14,6 +14,7 @@ import config, logging, logging.handlers, os, sys
 import flask_excel as excel
 import random
 from .mqtt import Mqtt
+from .scheduler import Scheduler
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -54,12 +55,13 @@ def ms2m_s_ms(value):
     else:
         return None
 
-mqtt = None
+mqtt = scheduler = None
 
 def create_app(config_name):
     global app
     global log
     global mqtt
+    global scheduler
 
     #set up logging
     LOG_FILENAME = os.path.join(sys.path[0], app_config[config_name].STATIC_PATH, 'log/ib-log.txt')
@@ -102,6 +104,9 @@ def create_app(config_name):
         mqtt = Mqtt(app, log)
         mqtt.start()
         mqtt.subscribe_to_switches()
+
+        scheduler = Scheduler(mqtt, app, log)
+        scheduler.start()
 
         from app import models
 

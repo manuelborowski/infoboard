@@ -197,12 +197,6 @@ function get_calendar_data() {
     });
 }
 
-function switch_click(id) {
-    var status = document.getElementById("switch" + id).checked;
-    $.getJSON(Flask.url_for('overview.change_switch_status', {'id': id, 'status': status}), function(data) {
-    });
-}
-
 function toggle_switch(id) {
     $.getJSON(Flask.url_for('overview.toggle_switch', {'id': id}), function(data) {
         if(data.status) {
@@ -239,9 +233,6 @@ function handle_floating_menu(menu_id) {
                 alert('Fout: kan schakelaar niet aanpassen');
             }
         });
-
-
-
     } else if (menu_id=='delete') {
         bootbox.confirm('Bent u zeker dat u deze schakelaar wilt wissen?', function(result) {
         if (result) {

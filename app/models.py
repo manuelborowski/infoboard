@@ -86,13 +86,12 @@ class Switches(db.Model):
     ip = db.Column(db.String(256))
     location = db.Column(db.String(256))
     type = db.Column(db.String(256))
-    status = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
-        return u'<Switches>: {}/{}/{}/{}/{}'.format(self.id, self.name, self.ip, self.location, self.time, self.status)
+        return u'<Switches>: {}/{}/{}/{}'.format(self.id, self.name, self.ip, self.location, self.time)
 
     def ret_dict(self):
-        return {'id': self.id, 'name': self.name, 'ip': self.ip, 'location': self.location, 'type': self.type, 'status': self.status}
+        return {'id': self.id, 'name': self.name, 'ip': self.ip, 'location': self.location, 'type': self.type}
 
 
 class Schedules(db.Model):
