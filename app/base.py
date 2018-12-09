@@ -260,7 +260,7 @@ def get_global_setting_auto_switch():
     return True
 
 def set_global_setting_auto_switch(value):
-    return set_setting('auto_switch', bool(value), 1)
+    return set_setting('auto_switch', str(value), 1)
 
 
 

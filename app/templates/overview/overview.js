@@ -260,6 +260,8 @@ function save_settings() {
         function(data) {
             if(data.status) {
                 alert('Instellingen zijn bewaard');
+            } else if('message' in data) {
+                alert(data.message)
             } else {
                 alert('Fout: kan instellingen niet bewaren');
             }
@@ -273,6 +275,7 @@ function get_settings() {
             $('#start_time').val(data.switch.start_time);
             $('#stop_time').val(data.switch.stop_time);
             $('#stop_time_wednesday').val(data.switch.stop_time_wednesday);
+            document.getElementById("auto_switch").checked = data.switch.auto_switch
         } else {
             alert('Fout: kan settings niet ophalen');
         }

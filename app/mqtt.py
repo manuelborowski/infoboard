@@ -92,6 +92,16 @@ class Mqtt:
         self.client.subscribe('/+/uptime')
         self.client.subscribe('/+/relaisin/state')
 
+    def set_all_switches_state(self, state):
+        try:
+            self.switch_lock.acquire()
+            for s in self.switch_status_dict:
+                self.set_switch_state(s, state)
+        except Exception as e:
+            self.log.info('error : {}'.format(e))
+        finally:
+            self.switch_lock.release()
+
     def set_switch_state(self, switch, state):
         message = "1" if state else "0"
         self.client.publish('/{}/gpio/12'.format(switch), message, retain=True)

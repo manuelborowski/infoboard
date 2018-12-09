@@ -22,11 +22,9 @@ from sqlalchemy import extract, or_
 from ..google_calendar import get_holidays
 
 def send_calendar_to_scheduler():
-    print 'before', datetime.now()
     yesterday = datetime.today() - timedelta(days=1)
     sl = Schedules.query.filter(Schedules.date > yesterday).order_by(Schedules.date).all()
     scheduler.set_scheduler_events(sl)
-    print 'after', datetime.now()
 
 
 #show the overview page
@@ -282,6 +280,15 @@ def check_switch_hb_status():
         switch_list.append({'name': s.name, 'id': s.id, 'hb': hb, 'status': status})
     return jsonify({"switch_list" : switch_list})
 
+def check_time_format(time):
+    try:
+        t_s = time.split(':')
+        h = int(t_s[0])
+        m = int(t_s[1])
+    except:
+        raise ValueError('Verkeerd formaat ({}), het moet zijn : UU:MM'.format(time))
+    return h*60+m
+
 #save settings
 @overview.route('/overview/save_settings/<string:settings>', methods=['GET', 'POST'])
 @login_required
@@ -289,11 +296,18 @@ def save_settings(settings):
     try:
         s = json.loads(settings)
         log.info('save settings: {}/{}/{}/{}'.format(s['start_time'], s['stop_time'], s['stop_time_wednesday'], s['auto_switch']))
+        start_time = check_time_format(s['start_time'])
+        stop_time = check_time_format(s['stop_time'])
+        stop_time_wednesday = check_time_format(s['stop_time_wednesday'])
+        if not (start_time < stop_time_wednesday and stop_time_wednesday <= stop_time):
+            raise ValueError('Fout : starttijd < stoptijd woensdag <= stoptijd')
         set_global_setting_time_start(s['start_time'])
         set_global_setting_time_stop(s['stop_time'])
         set_global_setting_time_stop_wednesday(s['stop_time_wednesday'])
         set_global_setting_auto_switch(s['auto_switch'])
         scheduler.set_scheduler_settings(s)
+    except ValueError as e:
+        return  jsonify({"status" : False, 'message': str(e)})
     except Exception as e:
         log.error('could not save the settings')
         return jsonify({"status" : False})
@@ -318,13 +332,18 @@ def get_settings():
         return jsonify({"status" : False})
     return jsonify({"status" : True, "switch": settings})
 
-@overview.route('/overview/rest_push_events/<string:message>', methods=['GET', 'POST'])
-def rest_push_events(message):
+@overview.route('/overview/rest_push_events_settings/<string:message>', methods=['GET', 'POST'])
+def rest_push_events_settings(message):
     log.info('push the events to the scheduler')
     try:
-        yesterday = datetime.today()-timedelta(days=1)
-        sl = Schedules.query.filter(Schedules.date > yesterday).order_by(Schedules.date).all()
-        scheduler.set_scheduler_events(sl)
+        send_calendar_to_scheduler()
+        settings = {
+            'start_time': get_global_setting_time_start(),
+            'stop_time': get_global_setting_time_stop(),
+            'stop_time_wednesday': get_global_setting_time_stop_wednesday(),
+            'auto_switch': get_global_setting_auto_switch()
+        }
+        scheduler.set_scheduler_settings(settings)
     except Exception as e:
         log.error('error, could not push the events ')
         return jsonify({'status' : False})
