@@ -103,5 +103,6 @@ class Mqtt:
             self.switch_lock.release()
 
     def set_switch_state(self, switch, state):
+        self.log.info("MQTT TX : switch {} to state {}".format(switch, state))
         message = "1" if state else "0"
         self.client.publish('/{}/gpio/12'.format(switch), message, retain=True)

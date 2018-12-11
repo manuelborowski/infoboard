@@ -57,7 +57,7 @@ class Scheduler:
         self.lock = Lock()
         self.settings = {}
         self.events = {}
-        self.rest = Rest(app)
+        self.rest = Rest(app, log)
         self.schedule_on = False
 
     def start(self):
@@ -141,8 +141,9 @@ class Scheduler:
         return h*60+m
 
 class Rest:
-    def __init__(self, app):
+    def __init__(self, app, log):
         self.app = app
+        self.log = log
         self.session = Session()
         self.server_address = 'http://localhost:{}'.format(self.app.config['SERVER_PORT'])
 

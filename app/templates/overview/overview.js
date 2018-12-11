@@ -69,9 +69,9 @@ $(window).load(function() {
             type: 'POST'
         },
         "columns": [
+            {name: 'Locatie', data: 'location'},
             {name: 'Naam', data: 'name'},
             {name: 'IP', data: 'ip'},
-            {name: 'Locatie', data: 'location'},
             {name: 'Aan/uit', data: 'status'},
             {name: 'Status', data: 'get_status'},
         ],
