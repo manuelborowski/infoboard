@@ -229,7 +229,7 @@ def add_switch(name, ip, location):
         if switch:
             log.error('switch already exists with this name or ip')
             return jsonify({"status" : False})
-        switch = Switches(name=name, ip=ip, location=location, type='sonof_s20', status=False)
+        switch = Switches(name=name, ip=ip, location=location, type='sonof_s20')
         db.session.add(switch)
         db.session.commit()
     except Exception as e:
