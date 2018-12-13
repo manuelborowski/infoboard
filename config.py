@@ -11,7 +11,6 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     LOG_LEVEL = "INFO"
     MQTT_SERVER = "localhost"
-    SERVER_PORT = 5005
 
 class DevelopmentConfig(Config):
     """
@@ -19,6 +18,7 @@ class DevelopmentConfig(Config):
     """
     DEBUG = True
     SQLALCHEMY_ECHO = False
+    SERVER_PORT = 5000
 
 
 class ProductionConfig(Config):
@@ -26,6 +26,7 @@ class ProductionConfig(Config):
     Production configurations
     """
     DEBUG = False
+    SERVER_PORT = 5005
 
 
 app_config = {

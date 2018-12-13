@@ -9,7 +9,8 @@ from datetime import datetime
 
 def thread_function(self):
     self.log.info('Start Scheduler Thread')
-    self.rest.force_push_events_settings()
+    sleep(1)
+    self.force_push_events_settings()
     while True:
         sleep(5)
         #required to check if a switch is still alive
@@ -57,8 +58,8 @@ class Scheduler:
         self.lock = Lock()
         self.settings = {}
         self.events = {}
-        self.rest = Rest(app, log)
         self.schedule_on = False
+        self.tc = app.test_client()
 
     def start(self):
         self.log.info('Start Scheduler')
@@ -140,31 +141,8 @@ class Scheduler:
             self.log.error('Bad format of ({}), must be UU:MM'.format(time))
         return h*60+m
 
-class Rest:
-    def __init__(self, app, log):
-        self.app = app
-        self.log = log
-        self.session = Session()
-        self.server_address = 'http://localhost:{}'.format(self.app.config['SERVER_PORT'])
-
     def force_push_events_settings(self):
-        return self._set('rest_push_events_settings', {})
-
-    def _set(self, command, json_message):
-        json_string = json.dumps(json_message)
-        self.session.head(self.server_address)
-        response = self.session.post(
-            url='{}/overview/{}/{}'.format(self.server_address, command, json_string),
-            headers={'Referer': self.server_address}
-        )
-        status = json.loads(response.content)
+        response = self.tc.get('/overview/rest_push_events_settings/{}'.format(json.dumps({})))
+        status = json.loads(response.data)
         return status['status']
 
-    def _get(self, command):
-        self.session.head(self.server_address)
-        response = self.session.post(
-            url='{}/overview/{}'.format(self.server_address, command),
-            headers={'Referer': self.server_address}
-        )
-        json_message = json.loads(response.content)
-        return json_message
