@@ -76,6 +76,10 @@ def create_app(config_name):
     log_handler.setFormatter(log_formatter)
     log.addHandler(log_handler)
 
+    #when using apache, the current working directory is /
+    #set it to .../app
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
     log.info('start IB')
 
     app.config.from_object(app_config[config_name])
