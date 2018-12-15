@@ -9,7 +9,7 @@ from datetime import datetime
 
 def thread_function(self):
     self.log.info('Start Scheduler Thread')
-    sleep(1)
+    sleep(3)
     self.force_push_events_settings()
     while True:
         sleep(5)
