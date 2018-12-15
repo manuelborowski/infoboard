@@ -22,7 +22,7 @@ def get_holidays(year=2018):
     if not creds or creds.invalid:
         flow = client.flow_from_clientsecrets('static/credentials.json', SCOPES)
         creds = tools.run_flow(flow, store)
-    service = build('calendar', 'v3', http=creds.authorize(Http()))
+    service = build('calendar', 'v3', http=creds.authorize(Http()), cache_discovery=False)
 
     # Call the Calendar API
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
