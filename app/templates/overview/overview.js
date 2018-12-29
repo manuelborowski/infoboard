@@ -70,10 +70,10 @@ $(window).load(function() {
         },
         "columns": [
             {name: 'Locatie', data: 'location'},
-            {name: 'Naam', data: 'name'},
-            {name: 'IP', data: 'ip'},
             {name: 'Aan/uit', data: 'status'},
             {name: 'Status', data: 'get_status'},
+            {name: 'Naam', data: 'name'},
+            {name: 'IP', data: 'ip'},
         ],
         "language" : {"url" : "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Dutch.json"}
     });
