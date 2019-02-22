@@ -3,26 +3,10 @@
 from __future__ import print_function
 import datetime
 from googleapiclient.discovery import build
-from httplib2 import Http
-from oauth2client import file, client, tools
-
-# If modifying these scopes, delete the file token.json.
-SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
+from . import app
 
 def get_holidays(year=2018):
-    """Shows basic usage of the Google Calendar API.
-    Prints the start and name of the next 10 events on the user's calendar.
-    """
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-
-    store = file.Storage('static/token.json')
-    creds = store.get()
-    if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets('static/credentials.json', SCOPES)
-        creds = tools.run_flow(flow, store)
-    service = build('calendar', 'v3', http=creds.authorize(Http()), cache_discovery=False)
+    service = build('calendar', 'v3', developerKey=app.config['GOOGLE_CALENDAR_API_KEY'], cache_discovery=False)
 
     # Call the Calendar API
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time

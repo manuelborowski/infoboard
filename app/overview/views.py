@@ -12,7 +12,7 @@ from ..base import set_global_setting_time_start, get_global_setting_time_start,
 from ..tables_config import  tables_configuration
 from .forms import AddForm, EditForm
 
-import cStringIO, csv, re, datetime, time, json
+import datetime, time, json
 from datetime import date, datetime, timedelta
 
 from sqlalchemy.exc import IntegrityError
@@ -178,7 +178,7 @@ def switches_data():
     try:
         switches_list = Switches.query.all()
         switches_dict = [i.ret_dict() for i in switches_list]
-        for i in xrange(len(switches_dict)):
+        for i in range(len(switches_dict)):
             switches_dict[i]['status'] = '<button type="button" class="btn btn-default" onclick="toggle_switch({})">Wijzig</button>'.format(switches_dict[i]['id'])
             switches_dict[i]['DT_RowId'] = switches_dict[i]['id']
             switches_dict[i]['get_status'] = '<p id="get_status{}">UIT</p>'.format(switches_dict[i]['id'])

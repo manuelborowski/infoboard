@@ -18,6 +18,13 @@ from .scheduler import Scheduler
 
 app = Flask(__name__, instance_relative_config=True)
 
+#V1.0 : python 3, simplified google api
+
+@app.context_processor
+def inject_version():
+    return dict(version = 'V1.0')
+
+
 #enable logging
 LOG_HANDLE = 'IB'
 log = logging.getLogger(LOG_HANDLE)
