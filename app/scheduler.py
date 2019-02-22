@@ -143,6 +143,6 @@ class Scheduler:
 
     def force_push_events_settings(self):
         response = self.tc.get('/overview/rest_push_events_settings/{}'.format(json.dumps({})))
-        status = json.loads(response.data)
+        status = json.loads(response.data.decode('utf-8'))
         return status['status']
 
