@@ -1,6 +1,7 @@
 import sys, os
 import logging
 logging.basicConfig(stream=sys.stderr)
+sys.path.insert(0,"/home/aboro/projects/infoboard/venv/lib/python3.7/site-packages")
 sys.path.insert(0,"/home/aboro/projects/infoboard")
 
 os.putenv('FLASK_CONFIG', 'production')
