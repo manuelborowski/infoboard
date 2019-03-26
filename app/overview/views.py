@@ -347,7 +347,7 @@ def rest_push_events_settings(message):
         }
         scheduler.set_scheduler_settings(settings)
     except Exception as e:
-        log.error('error, could not push the events ')
+        log.error('error, could not push the events : {}', e)
         return jsonify({'status' : False})
 
     return jsonify({'status' : True})
