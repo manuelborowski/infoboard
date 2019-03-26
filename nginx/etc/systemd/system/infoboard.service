@@ -1,0 +1,18 @@
+#copy to etc/systemd/system
+#change the User
+#change the path to the project
+
+[Unit]
+Description=uWSGI instance to serve infoboard
+After=network.target
+
+[Service]
+User=aboro
+Group=www-data
+WorkingDirectory=/home/aboro/projects/infoboard
+Environment="PATH=/home/aboro/projects/infoboard/venv/bin"
+ExecStart=/home/aboro/projects/infoboard/venv/bin/uwsgi --ini uwsgi.ini
+KillSignal=SIGKILL
+
+[Install]
+WantedBy=multi-user.target

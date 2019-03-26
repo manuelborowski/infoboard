@@ -176,12 +176,13 @@ def switches_data():
     log.info('Get the switches data from the database and display')
     switches_dict = {}
     try:
-        switches_list = Switches.query.all()
+        switches_list = Switches.query.order_by(Switches.name).all()
         switches_dict = [i.ret_dict() for i in switches_list]
         for i in range(len(switches_dict)):
             switches_dict[i]['status'] = '<button type="button" class="btn btn-default" onclick="toggle_switch({})">Wijzig</button>'.format(switches_dict[i]['id'])
             switches_dict[i]['DT_RowId'] = switches_dict[i]['id']
             switches_dict[i]['get_status'] = '<p id="get_status{}">UIT</p>'.format(switches_dict[i]['id'])
+            switches_dict[i]['get_ip'] = '<p id="get_ip{}">UIT</p>'.format(switches_dict[i]['id'])
     except Exception as e:
         log.error('could not retreive the switches from the database')
 
@@ -277,7 +278,8 @@ def check_switch_hb_status():
     for s in sl:
         hb = mqtt.check_switch_hb(s.name)
         status = mqtt.check_switch_status(s.name)
-        switch_list.append({'name': s.name, 'id': s.id, 'hb': hb, 'status': status})
+        ip = mqtt.get_switch_ip(s.name)
+        switch_list.append({'name': s.name, 'id': s.id, 'hb': hb, 'status': status, 'ip': ip})
     return jsonify({"switch_list" : switch_list})
 
 def check_time_format(time):

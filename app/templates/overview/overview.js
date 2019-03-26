@@ -73,7 +73,7 @@ $(window).load(function() {
             {name: 'Aan/uit', data: 'status'},
             {name: 'Status', data: 'get_status'},
             {name: 'Naam', data: 'name'},
-            {name: 'IP', data: 'ip'},
+            {name: 'IP', data: 'get_ip'},
         ],
         "language" : {"url" : "//cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Dutch.json"}
     });
@@ -117,6 +117,7 @@ function check_switch_hb_status() {
             $('#' + val.id).css("background-color", hb_color);
             status_text = val.status ? "AAN" : "UIT"
             $('#get_status' + val.id).text(status_text);
+            $('#get_ip' + val.id).text(val.ip);
         });
     });
 }

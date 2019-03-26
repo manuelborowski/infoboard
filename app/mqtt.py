@@ -14,6 +14,7 @@ class Mqtt:
         self.wait_on_connect = True
         self.switch_hb_dict = {}
         self.switch_status_dict = {}
+        self.switch_ip_dict = {}
         self.switch_lock = Lock()
 
     def on_connect(self, client, userdata, flags, rc):
@@ -24,6 +25,13 @@ class Mqtt:
     def on_message(self, client, userdata, message):
         try:
             self.switch_lock.acquire()
+            if message.topic.find('status') > 0:
+                switch = message.topic.split('/')[1]
+                payload = str(message.payload.decode("utf-8")).split(',')
+                status = int(payload[1])
+                self.switch_hb_dict[switch] = Mqtt.HB_COUNTER_RESET
+                self.switch_status_dict[switch] = True if status == 1 else False
+                self.switch_ip_dict[switch] = payload[0]
             if message.topic.find('relaisin') > 0:
                 switch = message.topic.split('/')[1]
                 status = int(str(message.payload.decode("utf-8")))
@@ -42,6 +50,7 @@ class Mqtt:
                 self.switch_hb_dict[switch] -= 1
                 if self.switch_hb_dict[switch] < 1:
                     self.switch_hb_dict[switch] = 0
+                    self.switch_ip_dict[switch] = '0.0.0.0'
         except Exception as e:
             self.log.info('error : {}'.format(e))
         finally:
@@ -76,6 +85,18 @@ class Mqtt:
             self.switch_lock.release()
         return switch_status
 
+    def get_switch_ip(self, switch):
+        switch_ip = '0.0.0.0'
+        try:
+            self.switch_lock.acquire()
+            if switch in self.switch_ip_dict:
+                switch_ip = self.switch_ip_dict[switch]
+        except Exception as e:
+            self.log.info('error : {}'.format(e))
+        finally:
+            self.switch_lock.release()
+        return switch_ip
+
     def start(self):
         self.log.info('Start MQTT client')
         self.client = mqtt.Client('infoboard')
@@ -87,10 +108,15 @@ class Mqtt:
             time.sleep(1)
         self.client.loop_start()
 
+    def stop(self):
+        self.log.info('Stop MQTT client')
+        self.client.loop_stop()
+
     def subscribe_to_switches(self):
         self.log.info('MQTT : subscribing to all switches')
         self.client.subscribe('/+/uptime')
         self.client.subscribe('/+/relaisin/state')
+        self.client.subscribe('/+/status')
 
     def set_all_switches_state(self, state):
         try:

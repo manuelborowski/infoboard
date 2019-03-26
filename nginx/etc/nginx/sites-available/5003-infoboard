@@ -1,0 +1,20 @@
+#original server-block.
+#copy to /etc/nginx/sites-available
+#make a softlink in /etc/nginx/sites-enabled
+#change the server_name
+#change the path to the socket
+
+#When installing a certificate for this site, another server-block is added by certbot, and this server-block
+#is changed
+#certbot --nginx
+
+server {
+    listen 5003;
+    listen 80;
+    server_name ib.exelbo.dynu.net;
+
+    location / {
+        include uwsgi_params;
+        uwsgi_pass unix:/home/aboro/projects/infoboard/uwsgi.sock;
+    }
+}

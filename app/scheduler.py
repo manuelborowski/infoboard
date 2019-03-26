@@ -11,7 +11,7 @@ def thread_function(self):
     self.log.info('Start Scheduler Thread')
     sleep(3)
     self.force_push_events_settings()
-    while True:
+    while not self.stop_thread:
         sleep(5)
         #required to check if a switch is still alive
         self.mqtt.hb_timer_tick()
@@ -49,6 +49,8 @@ def thread_function(self):
                             self.log.info('enable infoboard NOT on wednesday {}'.format(now))
                             self.schedule_on = True
                             self.set_all_switches(True)
+    self.log.info('Stop Scheduler Thread')
+
 
 class Scheduler:
     def __init__(self, mqtt, app, log):
@@ -60,11 +62,17 @@ class Scheduler:
         self.events = {}
         self.schedule_on = False
         self.tc = app.test_client()
+        self.stop_thread = False
 
     def start(self):
         self.log.info('Start Scheduler')
         self.thread = Thread(target=thread_function, args=(self, ))
         self.thread.start()
+
+    def stop(self):
+        self.log.info('Stop Scheduler')
+        self.stop_thread = True
+        self.thread.join()
 
     def set_all_switches(self, status):
         self.mqtt.set_all_switches_state(status)
