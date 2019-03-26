@@ -221,16 +221,16 @@ def toggle_switch(id):
     return jsonify({"status" : True})
 
 #add a new switch
-@overview.route('/overview/add_switch/<string:name>/<string:ip>/<string:location>', methods=['GET', 'POST'])
+@overview.route('/overview/add_switch/<string:name>/<string:location>', methods=['GET', 'POST'])
 @login_required
-def add_switch(name, ip, location):
-    log.info('add a new switch: {}/{}/{}'.format(name, ip, location))
+def add_switch(name, location):
+    log.info('add a new switch: {}/{}'.format(name, location))
     try:
-        switch = Switches.query.filter(or_(Switches.name==name, Switches.ip==ip)).first()
+        switch = Switches.query.filter(Switches.name==name).first()
         if switch:
-            log.error('switch already exists with this name or ip')
+            log.error('switch already exists with this name')
             return jsonify({"status" : False})
-        switch = Switches(name=name, ip=ip, location=location, type='sonof_s20')
+        switch = Switches(name=name, ip='', location=location, type='sonof_s20')
         db.session.add(switch)
         db.session.commit()
     except Exception as e:

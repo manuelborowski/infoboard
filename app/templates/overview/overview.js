@@ -9,7 +9,6 @@ $(window).load(function() {
             if(switch_action=='add') {
                 $.getJSON(Flask.url_for('overview.add_switch',
                     {'name': $('#switch_name').val(),
-                    'ip': $('#switch_ip').val(),
                     'location':$('#switch_location').val()}),
                     function(data) {
                         if(data.status) {
@@ -23,7 +22,6 @@ $(window).load(function() {
                 $.getJSON(Flask.url_for('overview.edit_switch',
                     {'id': row_id,
                     'name': $('#switch_name').val(),
-                    'ip': $('#switch_ip').val(),
                     'location':$('#switch_location').val()}),
                     function(data) {
                         if(data.status) {

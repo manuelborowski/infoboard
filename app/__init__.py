@@ -20,10 +20,11 @@ app = Flask(__name__, instance_relative_config=True)
 
 #V1.0 : python 3, simplified google api
 #V1.1 : switched to nginx
+#V1.2 : add/update switch : no ip address required
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V1.1')
+    return dict(version = 'V1.2')
 
 #enable logging
 LOG_HANDLE = 'IB'
