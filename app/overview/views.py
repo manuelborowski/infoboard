@@ -240,14 +240,13 @@ def add_switch(name, location):
     return jsonify({"status" : True})
 
 #edit a switch
-@overview.route('/overview/edit_switch/<int:id>/<string:name>/<string:ip>/<string:location>', methods=['GET', 'POST'])
+@overview.route('/overview/edit_switch/<int:id>/<string:name>/<string:location>', methods=['GET', 'POST'])
 @login_required
-def edit_switch(id, name, ip, location):
-    log.info('edit a switch: {}/{}/{}/{}'.format(id, name, ip, location))
+def edit_switch(id, name, location):
+    log.info('edit a switch: {}/{}/{}'.format(id, name, location))
     try:
         switch = Switches.query.get_or_404(id)
         switch.name = name
-        switch.ip = ip
         switch.location = location
         db.session.commit()
     except Exception as e:
