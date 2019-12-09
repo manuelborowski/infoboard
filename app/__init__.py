@@ -13,7 +13,7 @@ from werkzeug.routing import IntegerConverter as OrigIntegerConvertor
 import logging.handlers, os, sys
 import flask_excel as excel
 import random
-from .mqtt import Mqtt
+from .mqtt import EspEasy, Tasmota
 from .scheduler import Scheduler
 
 app = Flask(__name__, instance_relative_config=True)
@@ -22,10 +22,11 @@ app = Flask(__name__, instance_relative_config=True)
 #V1.1 : switched to nginx
 #V1.2 : add/update switch : no ip address required
 #V1.3 : bugfix : could not edit switch
+# V2.0 : replaced Esp Easy with tasmota
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V1.3')
+    return dict(version = 'V2.0')
 
 #enable logging
 LOG_HANDLE = 'IB'
@@ -106,7 +107,7 @@ login_manager.login_view = 'auth.login'
 
 migrate = Migrate(app, db)
 
-mqtt = Mqtt(app, log)
+mqtt = Tasmota(app, log)
 mqtt.start()
 mqtt.subscribe_to_switches()
 
