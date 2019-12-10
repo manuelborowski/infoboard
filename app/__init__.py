@@ -23,10 +23,11 @@ app = Flask(__name__, instance_relative_config=True)
 #V1.2 : add/update switch : no ip address required
 #V1.3 : bugfix : could not edit switch
 # V2.0 : replaced Esp Easy with tasmota
+# V2.1 : added uwsgi logging
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V2.0')
+    return dict(version = 'V2.1')
 
 #enable logging
 LOG_HANDLE = 'IB'
