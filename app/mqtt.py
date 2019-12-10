@@ -252,27 +252,29 @@ class Tasmota:
         self.client.subscribe('stat/+/STATUS5')
 
     def set_all_switches_state(self, state):
+        for s in self.switch_status_dict:
+            self.set_switch_state(s, state)
+
+
+    def set_switch_state(self, switch, state):
+        self.log.info("MQTT TX : switch {} to state {}".format(switch, state))
         try:
             self.switch_lock.acquire()
-            for s in self.switch_status_dict:
-                self.set_switch_state(s, state)
+            message = "ON" if state else "OFF"
+            self.client.publish(f'cmnd/{switch}/power', message, retain=True)
         except Exception as e:
             self.log.info('error : {}'.format(e))
         finally:
             self.switch_lock.release()
 
-    def set_switch_state(self, switch, state):
-        self.log.info("MQTT TX : switch {} to state {}".format(switch, state))
-        message = "ON" if state else "OFF"
-        self.client.publish(f'cmnd/{switch}/power', message, retain=True)
 
-
+    # warning : no protection with lock!
     def request_status(self, switch):
         self.log.info(f"MQTT TX : request status of switch {switch}")
         message = 5  # network information
         self.client.publish(f'cmnd/{switch}/status', message, retain=False)
 
-
+    # warning : no protection with lock!
     def request_state(self, switch):
         self.log.info(f"MQTT TX : request state of switch {switch}")
         message = '?'
