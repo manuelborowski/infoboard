@@ -26,10 +26,11 @@ app = Flask(__name__, instance_relative_config=True)
 # V2.1 : added uwsgi logging
 # V2.2 : issue with lock
 # V2.3 : mqtt publish : do NOT put inside lock
+# V2.4 : list of switches : order by location
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V2.3')
+    return dict(version = 'V2.4')
 
 #enable logging
 LOG_HANDLE = 'IB'

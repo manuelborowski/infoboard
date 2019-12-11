@@ -34,7 +34,7 @@ def show():
     #get the switch devices from the datebase
     sdl = None
     try:
-        sdl = Switches.query.order_by(Switches.name).all()
+        sdl = Switches.query.order_by(Switches.location).all()
     except Exception as e:
         log.error('Could not get the switch devices from the database')
 
@@ -176,7 +176,7 @@ def switches_data():
     log.info('Get the switches data from the database and display')
     switches_dict = {}
     try:
-        switches_list = Switches.query.order_by(Switches.name).all()
+        switches_list = Switches.query.order_by(Switches.location).all()
         switches_dict = [i.ret_dict() for i in switches_list]
         for i in range(len(switches_dict)):
             switches_dict[i]['status'] = '<button type="button" class="btn btn-default" onclick="toggle_switch({})">Wijzig</button>'.format(switches_dict[i]['id'])
