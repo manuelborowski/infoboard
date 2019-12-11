@@ -175,11 +175,12 @@ class Tasmota:
 
     #needs to be called at regular interval to sample the heartbeat
     def hb_timer_tick(self):
+        for switch in self.switch_hb_dict:
+            self.request_status(switch)
+            self.request_state(switch)
         try:
             self.switch_lock.acquire()
             for switch in self.switch_hb_dict:
-                self.request_status(switch)
-                self.request_state(switch)
                 self.switch_hb_dict[switch] -= 1
                 if self.switch_hb_dict[switch] < 1:
                     self.switch_hb_dict[switch] = 0
@@ -255,18 +256,11 @@ class Tasmota:
         for s in self.switch_status_dict:
             self.set_switch_state(s, state)
 
-
+    # warning : no protection with lock!
     def set_switch_state(self, switch, state):
         self.log.info("MQTT TX : switch {} to state {}".format(switch, state))
-        try:
-            self.switch_lock.acquire()
-            message = "ON" if state else "OFF"
-            self.client.publish(f'cmnd/{switch}/power', message, retain=True)
-        except Exception as e:
-            self.log.info('error : {}'.format(e))
-        finally:
-            self.switch_lock.release()
-
+        message = "ON" if state else "OFF"
+        self.client.publish(f'cmnd/{switch}/power', message, retain=True)
 
     # warning : no protection with lock!
     def request_status(self, switch):

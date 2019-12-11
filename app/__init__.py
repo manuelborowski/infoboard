@@ -25,10 +25,11 @@ app = Flask(__name__, instance_relative_config=True)
 # V2.0 : replaced Esp Easy with tasmota
 # V2.1 : added uwsgi logging
 # V2.2 : issue with lock
+# V2.3 : mqtt publish : do NOT put inside lock
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V2.2')
+    return dict(version = 'V2.3')
 
 #enable logging
 LOG_HANDLE = 'IB'
