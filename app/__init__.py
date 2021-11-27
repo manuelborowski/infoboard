@@ -27,10 +27,11 @@ app = Flask(__name__, instance_relative_config=True)
 # V2.2 : issue with lock
 # V2.3 : mqtt publish : do NOT put inside lock
 # V2.4 : list of switches : order by location
+# V2.5: update requirements.txt
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V2.4')
+    return dict(version = 'V2.5')
 
 #enable logging
 LOG_HANDLE = 'IB'
