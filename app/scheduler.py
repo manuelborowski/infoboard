@@ -5,6 +5,7 @@ from time import sleep
 from requests import Session
 import json
 from datetime import datetime
+from .base import get_schedule_settings
 
 
 def thread_function(self):
@@ -16,39 +17,26 @@ def thread_function(self):
         #required to check if a switch is still alive
         self.mqtt.hb_timer_tick()
 
-        #scheduler
-        settings = self.get_scheduler_settings()
-        if settings['auto_switch']:
-            day = self.get_scheduler_first_event()
-            if not day or day.date != datetime.today().date():
-                now = datetime.now()
-                now_minutes = now.hour * 60 + now.minute
-                start_time_minutes = self.time_string_to_minutes(settings['start_time'])
-                stop_time_wednesday_minutes = self.time_string_to_minutes(settings['stop_time_wednesday'])
-                stop_time_minutes = self.time_string_to_minutes(settings['stop_time'])
-                is_wednesday = True if now.weekday() == 3 else False
-                if self.schedule_on:
-                    if is_wednesday:
-                        if now_minutes >= stop_time_wednesday_minutes:
-                            self.log.info('disable infoboard, ON wednesday {}'.format(now))
-                            self.schedule_on = False
-                            self.set_all_switches(False)
+        day = self.get_scheduler_first_event()
+        if not day or day.date != datetime.today().date():
+            now = datetime.now()
+            now_minutes = now.hour * 60 + now.minute
+            schedules = get_schedule_settings()
+            temp_is_active = False
+            for schedule in schedules:
+                if schedule['auto_switch'] == 'True':
+                    start_time_minutes = self.time_string_to_minutes(schedule['start_time'])
+                    if now.weekday() == 3:
+                        stop_time_minutes = self.time_string_to_minutes(schedule['stop_time_wednesday'])
                     else:
-                        if now_minutes >= stop_time_minutes:
-                            self.log.info('disable infoboard, NOT on wednesday {}'.format(now))
-                            self.schedule_on = False
-                            self.set_all_switches(False)
-                else:
-                    if is_wednesday:
-                        if now_minutes >= start_time_minutes and now_minutes < stop_time_wednesday_minutes:
-                            self.log.info('enable infoboard ON wednesday {}'.format(now))
-                            self.schedule_on = True
-                            self.set_all_switches(True)
-                    else:
-                        if now_minutes >= start_time_minutes and now_minutes < stop_time_minutes:
-                            self.log.info('enable infoboard NOT on wednesday {}'.format(now))
-                            self.schedule_on = True
-                            self.set_all_switches(True)
+                        stop_time_minutes = self.time_string_to_minutes(schedule['stop_time'])
+                    if now_minutes >= start_time_minutes and now_minutes < stop_time_minutes:
+                        temp_is_active = True
+                        break
+            if temp_is_active != self.current_schedule_is_active:
+                self.current_schedule_is_active = temp_is_active
+                self.log.info(f'Switches go to {"ON" if temp_is_active else "OFF"} state at {now}')
+                self.set_all_switches(temp_is_active)
     self.log.info('Stop Scheduler Thread')
 
 
@@ -60,7 +48,7 @@ class Scheduler:
         self.lock = Lock()
         self.settings = {}
         self.events = {}
-        self.schedule_on = False
+        self.current_schedule_is_active = False
         self.tc = app.test_client()
         self.stop_thread = False
 
@@ -82,7 +70,7 @@ class Scheduler:
             self.lock.acquire()
             self.settings = settings
             if settings['auto_switch']:
-                self.schedule_on = False
+                self.current_schedule_is_active = False
         except Exception as e:
             self.log.info('error : {}'.format(e))
         finally:

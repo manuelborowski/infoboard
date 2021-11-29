@@ -249,11 +249,15 @@ function handle_floating_menu(menu_id) {
 }
 
 function save_settings() {
-    var settings = {
-        'start_time': $('#start_time').val(),
-        'stop_time': $('#stop_time').val(),
-        'stop_time_wednesday':$('#stop_time_wednesday').val(),
-        'auto_switch': document.getElementById("auto_switch").checked
+    let settings = [];
+    for(i=0; i < 3; i++) {
+        let sched = {
+                'start_time': $(`#start_time${i}`).val(),
+                'stop_time': $(`#stop_time${i}`).val(),
+                'stop_time_wednesday': $(`#stop_time_wednesday${i}`).val(),
+                'auto_switch': document.getElementById(`auto_switch${i}`).checked
+            }
+        settings.push(sched);
     }
     $.getJSON(Flask.url_for('overview.save_settings', {'settings' : JSON.stringify(settings)}),
         function(data) {
@@ -271,10 +275,17 @@ function save_settings() {
 function get_settings() {
     $.getJSON(Flask.url_for('overview.get_settings'), function(data) {
         if(data.status) {
-            $('#start_time').val(data.switch.start_time);
-            $('#stop_time').val(data.switch.stop_time);
-            $('#stop_time_wednesday').val(data.switch.stop_time_wednesday);
-            document.getElementById("auto_switch").checked = data.switch.auto_switch
+            data.schedule.forEach((sched, i) => {
+                $(`#start_time${i}`).val(sched.start_time);
+                $(`#stop_time${i}`).val(sched.stop_time);
+                $(`#stop_time_wednesday${i}`).val(sched.stop_time_wednesday);
+                document.getElementById(`auto_switch${i}`).checked = sched.auto_switch
+
+            });
+            // $('#start_time').val(data.switch.start_time);
+            // $('#stop_time').val(data.switch.stop_time);
+            // $('#stop_time_wednesday').val(data.switch.stop_time_wednesday);
+            // document.getElementById("auto_switch").checked = data.switch.auto_switch
         } else {
             alert('Fout: kan settings niet ophalen');
         }

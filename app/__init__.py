@@ -14,7 +14,6 @@ import logging.handlers, os, sys
 import flask_excel as excel
 import random
 from .mqtt import EspEasy, Tasmota
-from .scheduler import Scheduler
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -28,10 +27,11 @@ app = Flask(__name__, instance_relative_config=True)
 # V2.3 : mqtt publish : do NOT put inside lock
 # V2.4 : list of switches : order by location
 # V2.5: update requirements.txt
+# V2.6: added 2 more timesettings
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V2.5')
+    return dict(version = 'V2.6')
 
 #enable logging
 LOG_HANDLE = 'IB'
@@ -40,7 +40,14 @@ log = logging.getLogger(LOG_HANDLE)
 # local imports
 from config import app_config
 
-db = SQLAlchemy()
+class MySQLAlchemy(SQLAlchemy):
+    def apply_driver_hacks(self, app, info, options):
+        options.update({
+            'isolation_level': 'READ COMMITTED',
+        })
+        super(MySQLAlchemy, self).apply_driver_hacks(app, info, options)
+
+db = MySQLAlchemy()
 login_manager = LoginManager()
 
 #The original werkzeug-url-converter cannot handle negative integers (e.g. asset/add/-1/1)
@@ -116,6 +123,7 @@ mqtt = Tasmota(app, log)
 mqtt.start()
 mqtt.subscribe_to_switches()
 
+from .scheduler import Scheduler
 scheduler = Scheduler(mqtt, app, log)
 scheduler.start()
 

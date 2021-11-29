@@ -6,38 +6,45 @@
 {% extends "base.html" %}
 
 {% block content2 %}
-<div class="content-section">
+    <div class="content-section">
     <div class="container">
         <h1>Schakelaars:</h1>
         <table cellspacing="0" class="table table-striped table-bordered " id="switches_table" width="100%">
-        <thead><tr>
-            <th>Locatie</th><th>Aan/uit</th><th>Status</th><th>Naam</th><th>IP</th>
-        </thead>
+            <thead>
+            <tr>
+                <th>Locatie</th>
+                <th>Aan/uit</th>
+                <th>Status</th>
+                <th>Naam</th>
+                <th>IP</th>
+            </thead>
         </table>
-        <button type="button" class="btn btn-default" data-toggle="modal" onclick="add_switch()">Nieuwe schakelaar</button>
+        <button type="button" class="btn btn-default" data-toggle="modal" onclick="add_switch()">Nieuwe schakelaar
+        </button>
         <!-- Modal -->
         <div class="modal fade" id="myModal" role="dialog">
             <div class="modal-dialog">
-              <!-- Modal content-->
-              <div class="modal-content">
-                <div class="modal-header">
-                  <button type="button" class="close" id="dismiss_modal" data-dismiss="modal">&times;</button>
-                  <h4 class="modal-title" id="modal_title"></h4>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="switch_name">Naam </label>
-                        <input type="text" class="form-control" id="switch_name" value="">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" id="dismiss_modal" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title" id="modal_title"></h4>
                     </div>
-                    <div class="form-group">
-                        <label for="switch_location">Locatie </label>
-                        <input type="text" class="form-control" id="switch_location" value="">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="switch_name">Naam </label>
+                            <input type="text" class="form-control" id="switch_name" value="">
+                        </div>
+                        <div class="form-group">
+                            <label for="switch_location">Locatie </label>
+                            <input type="text" class="form-control" id="switch_location" value="">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="close_modal" type="button" class="btn btn-default" data-dismiss="modal">Bewaar
+                        </button>
                     </div>
                 </div>
-                <div class="modal-footer">
-                  <button id="close_modal" type="button" class="btn btn-default" data-dismiss="modal">Bewaar</button>
-                </div>
-              </div>
             </div>
         </div>
     </div>
@@ -45,58 +52,52 @@
         <h1>Kalender:</h1>
         <div id="calendar" class="calendar"></div>
         <div class="col-sm-2">
-        <input class="btn btn-default" id="clear_calendar" value="wis kalender" onclick="confirm_before_delete('Bent u zeker dat u de kalender wil wissen?', clear_calendar)">
+            <input class="btn btn-default" id="clear_calendar" value="wis kalender"
+                   onclick="confirm_before_delete('Bent u zeker dat u de kalender wil wissen?', clear_calendar)">
         </div>
         <div class="col-sm-2">
-        <input class="btn btn-default" id="load_calendar" value="laad kalender" onclick="load_calendar()">
+            <input class="btn btn-default" id="load_calendar" value="laad kalender" onclick="load_calendar()">
         </div>
     </div>
     <div class="container">
         <h1>Instellingen:</h1>
-        <div class="row">
-            <div class="col-sm-3">
-            <div class="input-group">
-                <span class="input-group-addon">Starttijd infoborden</span>
-                <input id="start_time" type="text" class="form-control" name="msg" title="UU:MM">
-            </div>
-            </div>
-            <div class="col-sm-4">
-            <div class="input-group">
-                <span class="input-group-addon">Stoptijd infoborden op woensdag</span>
-                <input id="stop_time_wednesday" type="text" class="form-control" name="msg" title="UU:MM">
-            </div>
-            </div>
-            <div class="col-sm-4">
-            <div class="input-group">
-                <span class="input-group-addon">Stoptijd infoborden</span>
-                <input id="stop_time" type="text" class="form-control" name="msg" title="UU:MM">
-            </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-4">
-            <div class="input-group">
-                <span class="input-group-addon">Schakelaars automatisch schakelen</span>
-                <input type="checkbox" id="auto_switch" class="form-control">
-            </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-3">
-            <button type="button" class="btn btn-default" data-toggle="modal" onclick="save_settings()">Bewaar</button>
-            </div>
-        </div>
+        <table>
+            <tr>
+                <th>Actief</th>
+                <th>Start</th>
+                <th>Stop op woensdag</th>
+                <th>Stop</th>
+            </tr>
+            <tr>
+                <td><input type="checkbox" id="auto_switch0" class="form-control"></td>
+                <td><input id="start_time0" type="text" class="form-control" name="msg" title="UU:MM"></td>
+                <td><input id="stop_time_wednesday0" type="text" class="form-control" name="msg" title="UU:MM"></td>
+                <td><input id="stop_time0" type="text" class="form-control" name="msg" title="UU:MM"></td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" id="auto_switch1" class="form-control"></td>
+                <td><input id="start_time1" type="text" class="form-control" name="msg" title="UU:MM"></td>
+                <td><input id="stop_time_wednesday1" type="text" class="form-control" name="msg" title="UU:MM"></td>
+                <td><input id="stop_time1" type="text" class="form-control" name="msg" title="UU:MM"></td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" id="auto_switch2" class="form-control"></td>
+                <td><input id="start_time2" type="text" class="form-control" name="msg" title="UU:MM"></td>
+                <td><input id="stop_time_wednesday2" type="text" class="form-control" name="msg" title="UU:MM"></td>
+                <td><input id="stop_time2" type="text" class="form-control" name="msg" title="UU:MM"></td>
+            </tr>
+        </table>
+        <button type="button" class="btn btn-default" data-toggle="modal" onclick="save_settings()">Bewaar</button>
     </div>
- </div>
 
-<div id="menu">
+    <div id="menu">
         <a style="width:200px;font-size:13px" id="menu1" onclick="handle_floating_menu('edit')">Pas aan</a>
         <a style="width:200px;font-size:13px" id="menu2" onclick="handle_floating_menu('delete')">Verwijder</a>
-</div>
+    </div>
 {% endblock %}
 
 {% block scripts %}
-{{ super() }}
-<script type="text/javascript" > {% include "overview/overview.js" %}</script>
+    {{ super() }}
+    <script type="text/javascript"> {% include "overview/overview.js" %}</script>
 
 {% endblock %}

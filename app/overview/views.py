@@ -8,7 +8,7 @@ from . import overview
 from ..models import  Schedules, Switches
 from ..base import set_global_setting_time_start, get_global_setting_time_start, set_global_setting_time_stop, \
     get_global_setting_time_stop, set_global_setting_time_stop_wednesday, get_global_setting_time_stop_wednesday, \
-    get_global_setting_auto_switch, set_global_setting_auto_switch
+    get_global_setting_auto_switch, set_global_setting_auto_switch, set_global_setting, get_global_setting, get_schedule_settings
 from ..tables_config import  tables_configuration
 from .forms import AddForm, EditForm
 
@@ -295,18 +295,19 @@ def check_time_format(time):
 @login_required
 def save_settings(settings):
     try:
-        s = json.loads(settings)
-        log.info('save settings: {}/{}/{}/{}'.format(s['start_time'], s['stop_time'], s['stop_time_wednesday'], s['auto_switch']))
-        start_time = check_time_format(s['start_time'])
-        stop_time = check_time_format(s['stop_time'])
-        stop_time_wednesday = check_time_format(s['stop_time_wednesday'])
-        if not (start_time < stop_time_wednesday and stop_time_wednesday <= stop_time):
-            raise ValueError('Fout : starttijd < stoptijd woensdag <= stoptijd')
-        set_global_setting_time_start(s['start_time'])
-        set_global_setting_time_stop(s['stop_time'])
-        set_global_setting_time_stop_wednesday(s['stop_time_wednesday'])
-        set_global_setting_auto_switch(s['auto_switch'])
-        scheduler.set_scheduler_settings(s)
+        sched_list = json.loads(settings)
+        for i, sched in enumerate(sched_list):
+            log.info(f'save settings: {sched["start_time"]}/{sched["stop_time_wednesday"]}/{sched["stop_time"]}/{sched["auto_switch"]}')
+            start_time = check_time_format(sched['start_time'])
+            stop_time = check_time_format(sched['stop_time'])
+            stop_time_wednesday = check_time_format(sched['stop_time_wednesday'])
+            if not (start_time < stop_time_wednesday and stop_time_wednesday <= stop_time):
+                raise ValueError(f'Fout in lijn {i} : starttijd < stoptijd woensdag <= stoptijd')
+            set_global_setting(f'start_time{i}', sched['start_time'])
+            set_global_setting(f'stop_time_wednesday{i}', sched['stop_time_wednesday'])
+            set_global_setting(f'stop_time{i}', sched['stop_time'])
+            set_global_setting(f'auto_switch{i}', sched['auto_switch'])
+            scheduler.set_scheduler_settings(sched)
     except ValueError as e:
         return  jsonify({"status" : False, 'message': str(e)})
     except Exception as e:
@@ -321,17 +322,11 @@ def save_settings(settings):
 def get_settings():
     log.info('Get the settings from the database')
     try:
-        settings = {
-            'start_time': get_global_setting_time_start(),
-            'stop_time': get_global_setting_time_stop(),
-            'stop_time_wednesday': get_global_setting_time_stop_wednesday(),
-            'auto_switch': get_global_setting_auto_switch()
-        }
-        scheduler.set_scheduler_settings(settings)
+        schedules = get_schedule_settings()
     except Exception as e:
         log.error('could not get the settings')
         return jsonify({"status" : False})
-    return jsonify({"status" : True, "switch": settings})
+    return jsonify({"status" : True, "schedule": schedules})
 
 @overview.route('/overview/rest_push_events_settings/<string:message>', methods=['GET', 'POST'])
 def rest_push_events_settings(message):

@@ -217,6 +217,9 @@ def get_setting_simulate_dayhour():
 def set_setting_simulate_dayhour(value):
     return set_setting('simulate_dayhour', value)
 
+def set_global_setting(setting, value):
+    return set_setting(setting, str(value), 1)
+
 def get_global_setting_current_schoolyear():
     found, value = get_setting('current_schoolyear', 1)
     if found: return value
@@ -262,7 +265,39 @@ def get_global_setting_auto_switch():
 def set_global_setting_auto_switch(value):
     return set_setting('auto_switch', str(value), 1)
 
+default_settings = {
+    'start_time0': '08:00',
+    'start_time1': '08:00',
+    'start_time2': '08:00',
+    'stop_time_wednesday0': '12:00',
+    'stop_time_wednesday1': '12:00',
+    'stop_time_wednesday2': '12:00',
+    'stop_time0': '16:00',
+    'stop_time1': '16:00',
+    'stop_time2': '16:00',
+    'auto_switch0': 'false',
+    'auto_switch1': 'false',
+    'auto_switch2': 'false',
+}
 
+def get_global_setting(setting):
+    found, value = get_setting(setting, 1)
+    if found: return value
+    add_setting(setting, default_settings[setting], Settings.SETTING_TYPE.E_STRING, 1)
+    return default_settings[setting]
+
+
+def get_schedule_settings():
+    settings = []
+    for i in range(3):
+        setting = {
+            'start_time': get_global_setting(f'start_time{i}'),
+            'stop_time': get_global_setting(f'stop_time{i}'),
+            'stop_time_wednesday': get_global_setting(f'stop_time_wednesday{i}'),
+            'auto_switch': get_global_setting(f'auto_switch{i}')
+        }
+        settings.append(setting)
+    return settings
 
 ######################################################################################################
 ###                                       Utility functions
