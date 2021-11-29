@@ -28,10 +28,11 @@ app = Flask(__name__, instance_relative_config=True)
 # V2.4 : list of switches : order by location
 # V2.5: update requirements.txt
 # V2.6: added 2 more timesettings
+# V2.7: log in via secret key
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V2.6')
+    return dict(version = 'V2.7')
 
 #enable logging
 LOG_HANDLE = 'IB'
