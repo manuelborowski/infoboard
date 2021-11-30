@@ -30,10 +30,11 @@ app = Flask(__name__, instance_relative_config=True)
 # V2.6: added 2 more timesettings
 # V2.7: log in via secret key
 # V2.8: bugfix: translate boolean-string to boolean
+# V2.9: cleanup
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V2.7')
+    return dict(version = 'V2.9')
 
 #enable logging
 LOG_HANDLE = 'IB'

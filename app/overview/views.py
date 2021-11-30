@@ -1,25 +1,16 @@
-# -*- coding: utf-8 -*-
-
-from flask import render_template, redirect, url_for, request, flash, send_file, session, jsonify
-from flask_login import login_required, current_user
+from flask import render_template, request, jsonify
+from flask_login import login_required
 
 from .. import db, log, mqtt, scheduler
 from . import overview
 from ..models import  Schedules, Switches
-from ..base import set_global_setting_time_start, get_global_setting_time_start, set_global_setting_time_stop, \
-    get_global_setting_time_stop, set_global_setting_time_stop_wednesday, get_global_setting_time_stop_wednesday, \
-    get_global_setting_auto_switch, set_global_setting_auto_switch, set_global_setting, get_global_setting, get_schedule_settings
-from ..tables_config import  tables_configuration
-from .forms import AddForm, EditForm
-
+from ..base import get_global_setting_time_start, \
+    get_global_setting_time_stop, get_global_setting_time_stop_wednesday, \
+    get_global_setting_auto_switch, set_global_setting,get_schedule_settings
 import datetime, time, json
 from datetime import date, datetime, timedelta
-
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import extract, or_
-
-
 from ..google_calendar import get_holidays
+from sqlalchemy import extract
 
 def send_calendar_to_scheduler():
     yesterday = datetime.today() - timedelta(days=1)
@@ -48,6 +39,7 @@ def weekdayDatesInAYear(year, day):
         yield d
         d += timedelta(days = 7)
 
+
 #This route is called by an ajax call to populate the calendar
 @overview.route('/overview/get_calendar_data/<int:year>', methods=['GET', 'POST'])
 @login_required
@@ -66,6 +58,7 @@ def get_calendar_data(year):
         t.append(e)
     send_calendar_to_scheduler()
     return jsonify({"calendar" : t})
+
 
 #This route is called by an ajax call to get the holidays of the current year from a google calendar
 #and to get all the weekends of said year
