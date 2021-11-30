@@ -294,7 +294,7 @@ def get_schedule_settings():
             'start_time': get_global_setting(f'start_time{i}'),
             'stop_time': get_global_setting(f'stop_time{i}'),
             'stop_time_wednesday': get_global_setting(f'stop_time_wednesday{i}'),
-            'auto_switch': get_global_setting(f'auto_switch{i}')
+            'auto_switch': get_global_setting(f'auto_switch{i}') == 'True'
         }
         settings.append(setting)
     return settings

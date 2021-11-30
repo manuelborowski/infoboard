@@ -29,6 +29,7 @@ app = Flask(__name__, instance_relative_config=True)
 # V2.5: update requirements.txt
 # V2.6: added 2 more timesettings
 # V2.7: log in via secret key
+# V2.8: bugfix: translate boolean-string to boolean
 
 @app.context_processor
 def inject_version():

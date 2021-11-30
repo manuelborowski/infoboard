@@ -280,12 +280,7 @@ function get_settings() {
                 $(`#stop_time${i}`).val(sched.stop_time);
                 $(`#stop_time_wednesday${i}`).val(sched.stop_time_wednesday);
                 document.getElementById(`auto_switch${i}`).checked = sched.auto_switch
-
             });
-            // $('#start_time').val(data.switch.start_time);
-            // $('#stop_time').val(data.switch.stop_time);
-            // $('#stop_time_wednesday').val(data.switch.stop_time_wednesday);
-            // document.getElementById("auto_switch").checked = data.switch.auto_switch
         } else {
             alert('Fout: kan settings niet ophalen');
         }
