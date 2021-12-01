@@ -264,12 +264,12 @@ class Tasmota:
 
     # warning : no protection with lock!
     def request_status(self, switch):
-        self.log.info(f"MQTT TX : request status of switch {switch}")
+        # self.log.info(f"MQTT TX : request status of switch {switch}")
         message = 5  # network information
         self.client.publish(f'cmnd/{switch}/status', message, retain=False)
 
     # warning : no protection with lock!
     def request_state(self, switch):
-        self.log.info(f"MQTT TX : request state of switch {switch}")
+        # self.log.info(f"MQTT TX : request state of switch {switch}")
         message = '?'
         self.client.publish(f'cmnd/{switch}/state', message, retain=False)

@@ -31,10 +31,11 @@ app = Flask(__name__, instance_relative_config=True)
 # V2.7: log in via secret key
 # V2.8: bugfix: translate boolean-string to boolean
 # V2.9: cleanup
+# V2.10: disabled some logging in mqtt
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V2.9')
+    return dict(version = 'V2.10')
 
 #enable logging
 LOG_HANDLE = 'IB'
