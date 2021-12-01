@@ -32,10 +32,12 @@ app = Flask(__name__, instance_relative_config=True)
 # V2.8: bugfix: translate boolean-string to boolean
 # V2.9: cleanup
 # V2.10: disabled some logging in mqtt
+# V2.11: small bugfix
+# V2.12: update version number in browser
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V2.10')
+    return dict(version = 'V2.12')
 
 #enable logging
 LOG_HANDLE = 'IB'
