@@ -12,6 +12,7 @@ def thread_function(self):
     self.log.info('Start Scheduler Thread')
     sleep(3)
     self.force_push_events_settings()
+    first_run = True
     while not self.stop_thread:
         sleep(5)
         #required to check if a switch is still alive
@@ -33,10 +34,11 @@ def thread_function(self):
                     if now_minutes >= start_time_minutes and now_minutes < stop_time_minutes:
                         temp_is_active = True
                         break
-            if temp_is_active != self.current_schedule_is_active:
+            if temp_is_active != self.current_schedule_is_active or first_run:
                 self.current_schedule_is_active = temp_is_active
                 self.log.info(f'Switches go to {"ON" if temp_is_active else "OFF"} state at {now}')
                 self.set_all_switches(temp_is_active)
+                first_run = False
     self.log.info('Stop Scheduler Thread')
 
 
