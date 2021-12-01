@@ -24,7 +24,7 @@ def thread_function(self):
             schedules = get_schedule_settings()
             temp_is_active = False
             for schedule in schedules:
-                if schedule['auto_switch'] == 'True':
+                if schedule['auto_switch']:
                     start_time_minutes = self.time_string_to_minutes(schedule['start_time'])
                     if now.weekday() == 3:
                         stop_time_minutes = self.time_string_to_minutes(schedule['stop_time_wednesday'])
