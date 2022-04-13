@@ -2,8 +2,8 @@
 
 import paho.mqtt.client as mqtt
 from threading import Lock
-
-import time, datetime,json
+from app.models import Switches
+import time, datetime,json, random, string
 
 class EspEasy:
     HB_COUNTER_RESET = 5
@@ -156,18 +156,22 @@ class Tasmota:
             self.switch_lock.acquire()
             if message.topic.find('RESULT') > 0:
                 switch = message.topic.split('/')[1]
-                payload = json.loads(str(message.payload.decode("utf-8")))
-                if 'POWER' in payload:
-                    status = True if payload['POWER'] == 'ON' else False
-                    self.switch_hb_dict[switch] = Tasmota.HB_COUNTER_RESET
-                    self.switch_status_dict[switch] = status
-                    # self.switch_ip_dict[switch] = payload[0]
+                switch_in_db = Switches.query.filter(Switches.name == switch).first()
+                if switch_in_db:
+                    payload = json.loads(str(message.payload.decode("utf-8")))
+                    if 'POWER' in payload:
+                        status = True if payload['POWER'] == 'ON' else False
+                        self.switch_hb_dict[switch] = Tasmota.HB_COUNTER_RESET
+                        self.switch_status_dict[switch] = status
+                        # self.switch_ip_dict[switch] = payload[0]
             if message.topic.find('STATUS5') > 0:
                 switch = message.topic.split('/')[1]
-                payload = json.loads(str(message.payload.decode("utf-8")))
-                if 'StatusNET' in payload:
-                    self.switch_hb_dict[switch] = Tasmota.HB_COUNTER_RESET
-                    self.switch_ip_dict[switch] = payload['StatusNET']['IPAddress']
+                switch_in_db = Switches.query.filter(Switches.name == switch).first()
+                if switch_in_db:
+                    payload = json.loads(str(message.payload.decode("utf-8")))
+                    if 'StatusNET' in payload:
+                        self.switch_hb_dict[switch] = Tasmota.HB_COUNTER_RESET
+                        self.switch_ip_dict[switch] = payload['StatusNET']['IPAddress']
         except Exception as e:
             self.log.info('error : {}'.format(e))
         finally:
@@ -234,7 +238,7 @@ class Tasmota:
 
     def start(self):
         self.log.info('Start MQTT client')
-        self.client = mqtt.Client('infoboard')
+        self.client = mqtt.Client(f'infoboard-{"".join(random.choices(string.ascii_uppercase + string.digits, k=10))}')
         self.client.on_connect=self.on_connect
         self.client.on_message = self.on_message
         self.client.connect(self.app.config['MQTT_SERVER'])

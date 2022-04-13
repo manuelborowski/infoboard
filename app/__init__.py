@@ -13,7 +13,6 @@ from werkzeug.routing import IntegerConverter as OrigIntegerConvertor
 import logging.handlers, os, sys
 import flask_excel as excel
 import random
-from .mqtt import EspEasy, Tasmota
 
 app = Flask(__name__, instance_relative_config=True)
 
@@ -35,10 +34,11 @@ app = Flask(__name__, instance_relative_config=True)
 # V2.11: small bugfix
 # V2.12: update version number in browser
 # V2.13: first run of scheduler: force switches to schedule
+# V2.14: a switch is cached when it is in the database only
 
 @app.context_processor
 def inject_version():
-    return dict(version = 'V2.13')
+    return dict(version = 'V2.14')
 
 #enable logging
 LOG_HANDLE = 'IB'
@@ -126,6 +126,7 @@ login_manager.login_view = 'auth.login'
 
 migrate = Migrate(app, db)
 
+from .mqtt import EspEasy, Tasmota
 mqtt = Tasmota(app, log)
 mqtt.start()
 mqtt.subscribe_to_switches()
